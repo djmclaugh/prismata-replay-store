@@ -1,0 +1,26 @@
+{
+  "name": "prismata-replay-store",
+  "version": "0.0.0",
+  "description": "Small app to store and share replays",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/djmclaugh/prismata-replay-store.git"
+  },
+  "keywords": [
+    "prismata"
+  ],
+  "author": "David McLaughlin <djmclaugh@gmail.com>",
+  "license": "(ISC) MIT",
+  "bugs": {
+    "url": "https://github.com/djmclaugh/prismata-replay-store/issues"
+  },
+  "homepage": "https://github.com/djmclaugh/prismata-replay-store",
+  "dependencies": {
+    "ejs": "^2.3.1",
+    "express": "^4.12.4"
+  }
+}
