@@ -19,7 +19,7 @@ function rawToObject(rawString) {
   replay.result = original_json.result;
   replay.start = new Date(1000 * original_json.startTime);
   replay.duration = original_json.endTime - original_json.startTime;
-  replay.length = original_json.timeInfo.turnNumber;
+  replay.length = original_json.commandInfo.moveDurations.length - 1;
 
   // We assume both players have the same random cards.
   replay.randomCards = original_json.deckInfo.randomizer[0];

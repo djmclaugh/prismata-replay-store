@@ -8,15 +8,9 @@
 
   <body>
     <h1>Prismata Replay Store</h1>
-    <% if (replay) { %><%-'<a target="_blank" href="http://play.prismata.net/?r=' + replay.id +'">'
-        + replay.players[0].name + ' (' + replay.players[0].rating + ') vs. '
-        + replay.players[1].name + ' (' + replay.players[1].rating + ')'
-        + '</a> <br>' %>
-    <% for (var i = 0; i < replay.randomCards.length; ++i) { %><%-replay.randomCards[i]%><% if (i < replay.randomCards.length - 1) { %>, <% } %><% } %> <br>
-    Winner: <% if (replay.result == 0 || replay.result == 1) { %><%= replay.players[replay.result].name %><% } else { %>DRAW<% } %> <br>
-    Number of Turns: <%= replay.length %> <br>
-    <%= replay.start %> 
-    <% } else if (error) { %> <%= error %> <% } %>
+    <% for (i = 0; i < replays.length; ++i) { var replay = replays[i]; %> 
+    <%- include replay.ejs %>    <br><% } %>
+    <% if (error) { %> <%= error %> <% } %>
   </body>
 </html>
 
