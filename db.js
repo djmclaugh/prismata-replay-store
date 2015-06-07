@@ -1,8 +1,9 @@
 var MongoClient = require('mongodb').MongoClient;
 var assert = require("assert");
 var ObjectId = require("mongodb").ObjectID;
-var url = "mongodb://localhost:27017/test";
-var replay_collection = "replays";
+var url = require("./config.json").databaseLocation;
+
+const replay_collection = "replays";
 
 function getReplay(db, replayID, callback) {
   var cursor = db.collection(replay_collection).find({"id": replayID});
@@ -30,7 +31,7 @@ function addReplay(db, replay, callback) {
   db.collection(replay_collection).updateOne(filter, replay, options, callback);
 }
 
-// Adds (or updates it already exists) a replay in the database.
+// Adds (or updates if it already exists) a replay in the database.
 // The callback will be passed no parameters.
 exports.insertReplay = function(replay, callback) {
   MongoClient.connect(url, function(error, db) {
@@ -41,6 +42,17 @@ exports.insertReplay = function(replay, callback) {
     });
   });
 };
+
+// Get the replay with the specified id.
+// The callback will be passed a the replay if found, null otherwise.
+exports.getReplayWithID = function(replayID, callback) {
+  MongoClient.connect(url, function(error, db) {
+    assert.equal(error, null);
+    getReplay(db, replayID, function(result) {
+      callback(result);
+    });
+  });
+}
 
 // Get an array containing all of the replays sorted from most to least recent.
 // The callback will be passed a single parameter; the array of all replays.

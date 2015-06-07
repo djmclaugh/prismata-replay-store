@@ -1,0 +1,14 @@
+{
+  "appURL": "The URL for this app - used when generating the email for login",
+  "databaseLocation": "The location of the mongo database",
+  "prismataReplaysLocation": "The location of the prismata service to fetch replays",
+  "secret": "insert a secret string here used to encrypt user sessions",
+  "emailServerOptions": {
+    "user": "username",
+    "password": "password",
+    "host": "host",
+    "ssl": true
+  },
+  "emailAddress": "The email address that will be used to send confirmation emails"
+}
+

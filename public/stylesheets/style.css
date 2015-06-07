@@ -1,10 +1,40 @@
 body {
   padding: 20px;
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
-  background-color: #F6F6F6;
+  background-color: #F0F0F0;
 }
 
 h1 {
   text-align: center;
+}
+
+p {
+  padding-left:10%;
+  padding-right:10%;
+  text-align: center;
+}
+
+form {
+  text-align: center;
+}
+
+#login {
+  position: absolute;
+  right: 30px;
+  top: 20px;
+}
+
+.replay {
+  background-color: #F9F9F9;
+  border: 1px solid #DDDDDD;
+  border-radius: 6px 6px 6px 6px;
+  padding: 5px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+.replay:hover {
+  border-color: #9BE0F9;
+  box-shadow: 0 0 5px #A6D5FD;
 }
 

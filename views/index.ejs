@@ -1,16 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <link href="stylesheets/style.css" rel="stylesheet">
-    <title>Primsata Replay Store</title>
-  </head>
-
+  <% var title = "Prismata Replays" %><%- include partials/header.ejs %>
   <body>
-    <h1>Prismata Replay Store</h1>
-    <% for (i = 0; i < replays.length; ++i) { var replay = replays[i]; %> 
-    <%- include replay.ejs %>    <br><% } %>
-    <% if (error) { %> <%= error %> <% } %>
+    <h1><%= title %></h1>
+    <%- include partials/login.ejs %> <% for (i = 0; i < replays.length; ++i) { var replay = replays[i]; %> 
+    <%- include partials/replay.ejs %><% } %> <% if (error) { %> <%= error %> <% } %>
   </body>
 </html>
 
