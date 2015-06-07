@@ -6,6 +6,7 @@ This app is meant to help players share and comment on interesting replays. This
 * Allow beginers to search for relevant games with units they don't understand to see how they are used.
 * Allow teams to share replays of interesting games so that they can comment on it and figure out as a team where the player went wrong.
 * Storage of important games such as tournament games.
+
 Here is what I do NOT want to accomplish:
 * This app is not meant to be a database of all prismata games. For a replay to be on the website, the replay code must be entered. Therefore, if both players keep the replay code secret, the replay will never be on this site. I would also appreciate if people only add interesting games (whatever that means).
 * This app is not meant to be an analytics tools. This app is not meant to figure out statistics like the percentage of p2 wins when Plasmafier is present.
