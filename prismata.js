@@ -28,6 +28,8 @@ function rawToReplay(rawString) {
     replay.randomCards[i] = getUIName(replay.randomCards[i], original_json.deckInfo.mergedDeck);
   }
 
+  replay.comments = [];
+
   return replay;
 }
 

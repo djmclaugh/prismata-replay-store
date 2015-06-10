@@ -10,9 +10,17 @@
     <% for (var i = 0; i < replay.randomCards.length; ++i) { %><% if (i != 0) { %>, <% } %><%-replay.randomCards[i]%><% } %> <br>
     Winner: <% if (replay.result == 0 || replay.result == 1) { %><%= replay.players[replay.result].name %><% } else { %>DRAW<% } %> <br>
     Number of Turns: <%= replay.length %> <br>
-    <%= replay.start %>
-    <% } else if (error) { %>
-      <p class="error"><%= error %></p>
+    <%= replay.start %> <br> <br>
+    <% for (var i = 0; i < replay.comments.length; ++i) { var comment = replay.comments[i]; %>
+      <%- include partials/comment.ejs %> <br>
     <% } %>
+      <% if (user) { %>
+    <form action="" method="POST">
+      Comment: <textarea name='comment'></textarea><br>
+      <input type="submit" value="Submit">
+    </form>
+      <% } %>
+    <% } %>
+    <%- include partials/errors.ejs %>
   </body>
 </html>

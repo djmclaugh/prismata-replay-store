@@ -4,7 +4,8 @@
   <body>
     <h1><%= title %></h1>
     <%- include partials/login.ejs %> <% for (i = 0; i < replays.length; ++i) { var replay = replays[i]; %> 
-    <%- include partials/replay.ejs %><% } %> <% if (error) { %> <%= error %> <% } %>
+    <%- include partials/replay.ejs %><% } %>
+    <%- include partials/errors.ejs %>
   </body>
 </html>
 
