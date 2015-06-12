@@ -5,8 +5,6 @@ var passwordless = require("passwordless");
 
 var router = express.Router();
 
-var pendin
-
 function setUp(req, res, next) {
   if (typeof(res.locals) == "undefined") {
     res.locals = {};
@@ -15,13 +13,16 @@ function setUp(req, res, next) {
   res.locals.errors = req.session.errors || [];
   req.session.errors = [];
   var userID = req.user;
-  db.getUser(userID, function(user) {
+  db.User.findById(userID, function(error, user) {
+    if (error) {
+      req.locals.errors.push(error.message);
+    }
     res.locals.user = user;
     next();
   });
 }
 
-function insertReplay(req, res, next) {
+function fetchReplay(req, res, next) {
   prismata.getReplay(req.params.replayID, function(error, replay) {
     if (replay) {
       res.locals.replays.push(replay);
@@ -33,46 +34,38 @@ function insertReplay(req, res, next) {
   });
 }
 
-function getReplays(req, res, next) {
-  db.getReplays(function(replays) {
+function getComments(req, res, next) {
+  db.Comment.find({replayCode: req.params.replayID})
+    .populate("user")
+    .exec(function(error, comments) {
+      console.log(comments);
+      if (error) {
+        res.locals.errors.push(error.message);
+      }
+      res.locals.comments = comments;
+      next();
+    });
+}
+
+function getAllReplays(req, res, next) {
+  db.Replay.find({}, null, {sort: {date: -1}}, function(error, replays) {
+    if (error) {
+      res.locals.errors.push(error.message);
+    }
     res.locals.replays = replays;
     next()
   });
 }
 
 function getUserId(email, delivery, callback, req) {
-  db.getOrCreateUserWithEmail(email, function(user) {
-    callback(null, user._id);
+  db.User.getOrCreateWithEmail(email, function(error, user) {
+    callback(error, user._id);
   });
-}
-
-function addUsernamesToComments(req, res, next) {
-  if (res.locals.replays.length == 0) {
-    next();
-  } else {
-    var comments = res.locals.replays[0].comments;
-    if (!comments) {
-      comments = res.locals.replays[0].comments = [];
-    }
-    var index = 0;
-    var addUsername = function () {
-      if (index < comments.length) {
-        db.getUser(comments[index].user, function(user) {
-          comments[index].username = user.username;
-          ++index;
-          addUsername();
-        });
-      } else {
-        next();
-      }
-    };
-    addUsername();
-  }
 }
 
 router.use(setUp);
 
-router.get("/", getReplays, function(req, res) {
+router.get("/", getAllReplays, function(req, res) {
   res.render("index", res.locals);
 });
 
@@ -89,12 +82,20 @@ router.post("/sendtoken", passwordless.requestToken(getUserId), function(req, re
   res.redirect("/");
 });
 
-router.get("/replay/:replayID", insertReplay, addUsernamesToComments, function(req, res) {
+router.get("/replay/:replayID", fetchReplay, getComments, function(req, res) {
   res.render("replay", res.locals);
 });
 
 router.post("/replay/:replayID", function(req, res) {
-  db.addCommentToReplay(req.params.replayID, res.locals.user._id, req.body.comment, function() {
+  var comment = {
+    user: res.locals.user,
+    replayCode: req.params.replayID,
+    message: req.body.comment,
+  };
+  db.Comment.create(comment,  function(error) {
+    if (error) {
+      req.session.error.push(error.message);
+    }
     res.redirect(303, "/replay/" + req.params.replayID);
   });
 });
@@ -104,7 +105,7 @@ router.get("/settings", function(req, res) {
 });
 
 router.post("/settings", function(req, res) {
-  db.changeUsername(res.locals.user._id, req.body.new_username, function(error) {
+  res.locals.user.changeUsername(req.body.new_username, function(error) {
     if (error) {
       req.session.errors.push(error.message);
     }

@@ -3,7 +3,7 @@
   <% var title = "Prismata Replays" %><%- include partials/header.ejs %>
   <body>
     <h1><%= title %></h1>
-    <%- include partials/login.ejs %> <% for (i = 0; i < replays.length; ++i) { var replay = replays[i]; %> 
+    <%- include partials/navigation_bar.ejs %> <% for (i = 0; i < replays.length; ++i) { var replay = replays[i]; %> 
     <%- include partials/replay.ejs %><% } %>
     <%- include partials/errors.ejs %>
   </body>

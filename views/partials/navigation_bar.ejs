@@ -1,0 +1,5 @@
+<div class="navigation">
+      <a href="/">Home</a>
+      <% if (user) { %><a href="/settings"><%= user.username %></a><% } %>
+      <a href=<% if (!user) { %>"/login">Login<% } else { %>"/logout">Logout<% } %></a>
+    </div>

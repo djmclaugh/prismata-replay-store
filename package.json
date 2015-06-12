@@ -27,6 +27,7 @@
     "express": "^4.12.4",
     "express-session": "^1.11.2",
     "mongodb": "^2.0.33",
+    "mongoose": "^4.0.5",
     "passwordless": "^1.0.9",
     "passwordless-mongostore": "^0.1.0"
   }

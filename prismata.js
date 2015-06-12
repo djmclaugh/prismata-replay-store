@@ -6,29 +6,27 @@ const replay_url = require("./config.json").prismataReplaysLocation;
 
 // Takes in the raw JSON string we get from the server and create a more useful object.
 function rawToReplay(rawString) {
-  var original_json = JSON.parse(rawString);
-  var replay = {};
+  var json = JSON.parse(rawString);
+  var replay = new db.Replay({});
   
-  replay.id = original_json.code;
+  replay.code = json.code;
   replay.players = [];
-  for (var i = 0; i < 2; ++i) {
-    replay.players[i] = {
-        name: original_json.playerInfo[i].displayName,
-        rating: Math.round(original_json.ratingInfo.initialRatings[i].displayRating)
-    };
+  for (var i = 0; i < json.playerInfo.length; ++i) {
+    replay.players.push({
+        name: json.playerInfo[i].displayName,
+        rating: Math.round(json.ratingInfo.initialRatings[i].displayRating)
+    });
   }
-  replay.result = original_json.result;
-  replay.start = new Date(1000 * original_json.startTime);
-  replay.duration = original_json.endTime - original_json.startTime;
-  replay.length = original_json.commandInfo.moveDurations.length - 1;
+  replay.result = json.result;
+  replay.date = new Date(1000 * json.startTime);
+  replay.duration = json.endTime - json.startTime;
+  replay.length = json.commandInfo.moveDurations.length - 1;
 
   // We assume both players have the same random cards.
-  replay.randomCards = original_json.deckInfo.randomizer[0];
+  replay.randomCards = json.deckInfo.randomizer[0];
   for (var i = 0; i < replay.randomCards.length; ++i) {
-    replay.randomCards[i] = getUIName(replay.randomCards[i], original_json.deckInfo.mergedDeck);
+    replay.randomCards[i] = getUIName(replay.randomCards[i], json.deckInfo.mergedDeck);
   }
-
-  replay.comments = [];
 
   return replay;
 }
@@ -39,7 +37,7 @@ function getUIName(name, mergedDeck) {
   for (var i = 0; i < mergedDeck.length; ++i) {
     var card = mergedDeck[i];
     if (card.name == name) {
-      return card.UIName ? card.UIName : name;
+      return card.UIName || name;
     }
   }
   return name;
@@ -58,8 +56,8 @@ function fetchReplay(replayID, callback) {
     if (res.statusCode == 200) {
       unzip(res, function(raw) {
         var replay = rawToReplay(raw);
-        db.insertReplay(replay, function() {
-          callback(null, replay);
+        db.Replay.upsert(replay, function(error) {
+          callback(error, replay);
         });
       });
     } else {
@@ -87,12 +85,13 @@ function unzip(response, callback) {
 // If the replay is not already in the database, this will fetch it from the prismata service and
 // update the database with the newly fetched replay.
 // The callback will be passed an error (if any) and the replay requested.
-exports.getReplay = function(replayID, callback) {
-  db.getReplayWithID(replayID, function(replay) {
-    if (replay) {
-      callback(null, replay);
+exports.getReplay = function(replayCode, callback) {
+  db.Replay.findOne({code: replayCode}, function(error, replay) {
+    console.log(replay);
+    if (error || replay) {
+      callback(error, replay);
     } else {
-      fetchReplay(replayID, callback);
+      fetchReplay(replayCode, callback);
     }
   });
 };

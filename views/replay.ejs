@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
-  <% var title = "Prismata Replays : "; var replay = null; if (replays.length == 1) { replay = replays[0]; title += replay.id; } else { title += "Error"; } %><%- include partials/header.ejs %>
+  <% var title = "Prismata Replays : "; var replay = null; if (replays.length == 1) { replay = replays[0]; title += replay.code; } else { title += "Error"; } %><%- include partials/header.ejs %>
   <body>
-    <%- include partials/login.ejs %>
-    <h1>Prismata Replays : <% if (replay) { %><%- '<a href="http://play.prismata.net/?r=' + replay.id + '">' + replay.id + '</a>' %><% } else { %>Error<% } %> </h1>
+    <%- include partials/navigation_bar.ejs %>
+    <h1>Prismata Replays : <% if (replay) { %><%- '<a href="http://play.prismata.net/?r=' + replay.code + '">' + replay.code + '</a>' %><% } else { %>Error<% } %> </h1>
     <% if (replay) { %>
     <%- replay.players[0].name + ' (' + replay.players[0].rating + ') vs. ' +
         replay.players[1].name + ' (' + replay.players[1].rating + ')' + '<br>' %>
     <% for (var i = 0; i < replay.randomCards.length; ++i) { %><% if (i != 0) { %>, <% } %><%-replay.randomCards[i]%><% } %> <br>
     Winner: <% if (replay.result == 0 || replay.result == 1) { %><%= replay.players[replay.result].name %><% } else { %>DRAW<% } %> <br>
     Number of Turns: <%= replay.length %> <br>
-    <%= replay.start %> <br> <br>
-    <% for (var i = 0; i < replay.comments.length; ++i) { var comment = replay.comments[i]; %>
+    <%= replay.date %> <br> <br>
+    <% for (var i = 0; i < comments.length; ++i) { var comment = comments[i]; %>
       <%- include partials/comment.ejs %> <br>
     <% } %>
       <% if (user) { %>

@@ -1,190 +1,95 @@
-var MongoClient = require('mongodb').MongoClient;
-var assert = require("assert");
-var ObjectID = require("mongodb").ObjectID;
-var url = require("./config.json").databaseLocation;
+var mongoose = require("mongoose");
+mongoose.connect(require("./config.json").databaseLocation);
+var db = mongoose.connection;
+var Schema = mongoose.Schema;
 
-const replay_collection = "replays";
-const user_collection = "users";
-
-// --- Replays ---
-
-function getReplay(db, replayID, callback) {
-  var cursor = db.collection(replay_collection).find({"id": replayID});
-  cursor.next(function(err, doc) {
-    assert.equal(err, null);
-    callback(doc);
-  });
-}
-
-function getAllReplays(db, callback) {
-  var results = [];
-  var cursor = db.collection(replay_collection).find().sort({start: -1});
-  var iterator = function(doc) {
-    results.push(doc);
-  }
-  cursor.forEach(iterator, function(error) {
-    assert.equal(error, null);
-    callback(results);
-  });
-}
-  
-function addReplay(db, replay, callback) {
-  var filter = {id: replay.id};
-  var options = {upsert: true};
-  db.collection(replay_collection).updateOne(filter, replay, options, callback);
-}
-
-function addComment(db, replayID, comment, callback) {
-  var filter = {id: replayID};
-  var update = {$push: {comments: comment}};
-  db.collection(replay_collection).updateOne(filter, update, callback);
-}
-
-// Adds (or updates if it already exists) a replay in the database.
-// The callback will be passed no parameters.
-exports.insertReplay = function(replay, callback) {
-  MongoClient.connect(url, function(error, db) {
-    assert.equal(error, null);
-    addReplay(db, replay, function(addError, result) {
-      assert.equal(addError, null);
-      callback();
-    });
-  });
-};
-
-// Get the replay with the specified id.
-// The callback will be passed a the replay if found, null otherwise.
-exports.getReplayWithID = function(replayID, callback) {
-  MongoClient.connect(url, function(error, db) {
-    assert.equal(error, null);
-    getReplay(db, replayID, function(result) {
-      callback(result);
-    });
-  });
-}
-
-// Get an array containing all of the replays sorted from most to least recent.
-// The callback will be passed a single parameter; the array of all replays.
-exports.getReplays = function(callback) {
-  MongoClient.connect(url, function(error, db) {
-    assert.equal(error, null);
-    getAllReplays(db, function(result) {
-      callback(result);
-      db.close();
-    });
-  });
-};
-
-exports.addCommentToReplay = function(replayID, user, text, callback) {
-  comment = {user: user, text: text, time: Date.now()};
-  MongoClient.connect(url, function(error, db) {
-    assert.equal(error, null);
-    addComment(db, replayID, comment, function(result) {
-      callback();
-      db.close();
-    });
-  });
-};
+const userModelName = "User";
+const commentModelName = "Comment";
+const replayModelName = "Replay";
 
 // --- Users ---
+var userSchema = Schema({
+  username: String,
+  email: String
+});
 
-function getUserWithEmail(db, email, callback) {
-  var cursor = db.collection(user_collection).find({email: email});
-  cursor.next(function(err, doc) {
-    assert.equal(err, null);
-    callback(doc);
-  });
-}
-
-function getUserWithUsername(db, username, callback) {
-  var cursor = db.collection(user_collection).find({username: username});
-  cursor.next(function(err, doc) {
-    assert.equal(err, null);
-    callback(doc);
-  });
-}
-
-function getUserWithId(db, id, callback) {
-  var cursor = db.collection(user_collection).find({_id: id});
-  cursor.next(function(err, doc) {
-    assert.equal(err, null);
-    callback(doc);
-  });
-}
-
-function addUser(db, email, callback) {
-  var collection = db.collection(user_collection);
-  var user = {username: email, email: email};
-  db.collection(user_collection).insert(user, function(error, result) {
-    assert.equal(error, null);
-    callback(result);
-  });
-}
-
-function changeUsername(db, id, newUsername, callback) {
-  if (newUsername.length < 3) {
-    callback(new Error("Username must be at least 3 characters long."));
-    return;
-  }
-  if (newUsername.length > 20) {
-    callback(new Error("Username must be at most 20 characters long."));
-    return;  
-  }
-  getUserWithUsername(db, newUsername, function(doc) {
-    if (doc) {
-      var error = new Error("Username \"" + username + "\" is already taken.");
-      callback(error);
-      return;
+// Statics
+// callback - function(error, user)
+userSchema.statics.getOrCreateWithEmail = function (email, callback) {
+  var self = this;
+  // Pass the user to the callback if it exists.
+  // If the user doesn't exist, create a new one and pass it to the callback
+  var onLookup = function(error, user) {
+    if (user || error) {
+      callback(error, user);
+    } else {
+      self.create({username: email, email: email}, callback);
     }
-    var filter = {_id: id};
-    var update = {$set: {username: newUsername}};
-    db.collection(user_collection).updateOne(filter, update, function(error, result) {
-      assert.equal(error, null);
-      callback(null);
-    });
-  });
-}
+  };
 
-exports.getOrCreateUserWithEmail = function(email, callback) {
-  MongoClient.connect(url, function(error, db) {
-    assert.equal(error, null);
-    getUserWithEmail(db, email, function(doc) {
-      if (doc) {
-        callback(doc);
-        db.close();
+  self.findOne({email: email}, onLookup);
+};
+
+// Methods
+// callback - function(error)
+userSchema.methods.changeUsername = function(newUsername, callback) {
+  var self = this;
+  if (newUsername.length < 3) {
+    callback(new Error("Username must be at least 3 charaters long."));
+  } else if (newUsername.length > 20) {
+    callback(new Error("Username must be at most 20 characters long."));
+  } else {
+    // If a user is found, then the username is not available.
+    // Otherwise, procede with changeing the user's username.
+    var onLookup = function(error, user) {
+      if (error) {
+        callback(error);
+      } else if (user) {
+        callback(new Error("Username " + newUsername + " is not available."));
       } else {
-        addUser(db, email, function(result) {
-          callback(result.ops[0]);
-          db.close();
-        });
-      }
-    });
-  });
-};
-
-exports.changeUsername = function(id, newUsername, callback) {
-  var _id = typeof id == "string" ? new ObjectID(id) : id;
-  MongoClient.connect(url, function(error, db) {
-    assert.equal(error, null);
-    changeUsername(db, _id, newUsername, function(err) {
-      callback(err);
-      db.close();
-    });
-  });
-};
-
-exports.getUser = function(id, callback) {
-  if (!id) {
-    callback(null);
-    return;
+        self.username = newUsername;
+        self.save(callback);
+      } 
+    };
+    self.model(userModelName).findOne({username: newUsername}, onLookup);
   }
-  var _id = typeof id == "string" ? new ObjectID(id) : id;
-  MongoClient.connect(url, function(error, db) {
-    assert.equal(error, null);
-    getUserWithId(db, _id, function(user) {
-      callback(user);
-      db.close();
-    });
-  });
 };
+
+exports.User = mongoose.model(userModelName, userSchema);
+
+// --- Comments ---
+var commentSchema = Schema({
+  user: {type: Schema.Types.ObjectId, ref: userModelName},
+  replayCode: String,
+  message: String,
+  date: {type: Date, default: Date.now}
+});
+
+exports.Comment = mongoose.model(commentModelName, commentSchema);
+
+// --- Replays ---
+var playerSchema = Schema({
+  name: String,
+  rating: Number
+});
+
+var replaySchema = Schema({
+  code: String,
+  players: [playerSchema],
+  result: Number,
+  date: Date,
+  duration: Number,
+  length: Number,
+  randomCards: [String],
+});
+
+// Statics
+// callback - function(error)
+replaySchema.statics.upsert = function(replay, callback) {
+  var upsertData = replay.toObject();
+  delete upsertData._id;
+  this.update({_id: replay.id}, upsertData, {upsert: true}, callback);
+};
+
+exports.Replay = mongoose.model(replayModelName, replaySchema);
 
