@@ -22,6 +22,53 @@ function setUp(req, res, next) {
   });
 }
 
+function populateSearch(req, res, next) {
+  var search = req.session.search;
+  req.session.search = null;
+  
+  if (!search) {
+    next();
+    return;
+  }
+  
+  var filter = {};
+  
+  if (search.player && typeof search.player == "string") {
+    filter["players.name"] = search.player;
+  }
+
+  if (search.units && typeof search.units == "string") {
+    var units = search.units.split(",");
+    for (var i = 0; i < units.length; ++i) {
+      // Remove whitespace.
+      units[i] = units[i].trim();
+      // Capitalise the first character of each word.
+      units[i] = units[i].replace(/\w+/g, function(txt){
+        return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+      });
+    }
+    filter["randomCards"] = {$all: units};
+  }
+  
+  if (search.min_rating || search.max_rating) {
+    var min = search.min_rating ? Number(search.min_rating) : 0;
+    var max = search.max_rating ? Number(search.max_rating) : Number.MAX_VALUE;
+    filter["players"] =
+        {$not: {$elemMatch: {$or: [{rating: {$lt:min}}, {rating: {$gt: max}}]}}};
+  }
+  
+  db.Replay.find(filter, null, {sort: {date: -1}}, function(error, replays) {
+    if (error) {
+      res.locals.errors.push(error.message);
+    }
+    if (replays.length == 0) {
+      res.locals.errors.push("No results found.");
+    } 
+    res.locals.replays = replays;
+    next();
+  });
+}
+
 function fetchReplay(req, res, next) {
   prismata.getReplay(req.params.replayID, function(error, replay) {
     if (replay) {
@@ -38,7 +85,6 @@ function getComments(req, res, next) {
   db.Comment.find({replayCode: req.params.replayID})
     .populate("user")
     .exec(function(error, comments) {
-      console.log(comments);
       if (error) {
         res.locals.errors.push(error.message);
       }
@@ -78,8 +124,16 @@ router.get("/logout", passwordless.logout(), function(req, res) {
 });
 
 router.post("/sendtoken", passwordless.requestToken(getUserId), function(req, res) {
-  console.log(req.params);
   res.redirect("/");
+});
+
+router.get("/search", populateSearch, function(req, res) {
+  res.render("search", res.locals);
+});
+
+router.post("/search", function(req, res) {
+  req.session.search = req.body;
+  res.redirect(303, "/search");
 });
 
 router.get("/replay/:replayID", fetchReplay, getComments, function(req, res) {

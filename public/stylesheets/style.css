@@ -18,6 +18,10 @@ form {
   text-align: center;
 }
 
+.error {
+  color: red;
+}
+
 .navigation {
   position: absolute;
   right: 30px;

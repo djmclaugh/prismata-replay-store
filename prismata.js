@@ -87,7 +87,6 @@ function unzip(response, callback) {
 // The callback will be passed an error (if any) and the replay requested.
 exports.getReplay = function(replayCode, callback) {
   db.Replay.findOne({code: replayCode}, function(error, replay) {
-    console.log(replay);
     if (error || replay) {
       callback(error, replay);
     } else {

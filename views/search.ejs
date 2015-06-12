@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+  <%var title = "Prismata Replays : Search" %><%- include partials/header.ejs %>
+  <body>
+    <%- include partials/navigation_bar.ejs %>
+    <h1><%= title %></h1>
+    <form action="/search" method="POST">
+      Contains player: <input name="player" type="text"> <br>
+      Minimum rating: <input name="min_rating" type="number"> <br>
+      Maximum rating: <input name="max_rating" type="number"> <br> <br>
+      Contains units: <input name="units" type="text" size="30"> <br>
+      (Seperate units using a comma. Example: "Husk, Wild Drone, Shadowfang")<br> <br>
+      <input type="submit" value="Search">
+    </form>
+    <% for (i = 0; i < replays.length; ++i) { var replay = replays[i]; %>
+    <%- include partials/replay.ejs %><% } %>
+    <%- include partials/errors.ejs %>
+  </body>
+</html>
