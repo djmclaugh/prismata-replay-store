@@ -9,6 +9,8 @@ var email = require("emailjs");
 var PasswordlessMongoStore = require("passwordless-mongostore");
 var passwordless = require("passwordless");
 
+var db = require("./db");
+
 var emailServer = email.server.connect(config.emailServerOptions);
 var emailDelivery = function(tokenToSend, uidToSend, recipient, callback) {
   var email = {
@@ -48,6 +50,10 @@ app.use(passwordless.sessionSupport());
 app.use(passwordless.acceptToken({ successRedirect: "/"}));
 
 app.use(require("./router"));
+
+setInterval(function() {
+  db.Replay.modifyPopularityOfAllReplays(0.9, function() {});
+}, 1000 * 60 * 60);
 
 app.listen(8080);
 

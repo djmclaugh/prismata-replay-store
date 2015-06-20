@@ -1,5 +1,4 @@
 var express = require("express");
-var prismata = require("./prismata");
 var db = require("./db");
 var passwordless = require("passwordless");
 
@@ -9,7 +8,10 @@ function setUp(req, res, next) {
   if (typeof(res.locals) == "undefined") {
     res.locals = {};
   }
+  res.locals.replay = null;
   res.locals.replays = [];
+  res.locals.recentReplays = [];
+  res.locals.popularReplays = [];
   res.locals.errors = req.session.errors || [];
   req.session.errors = [];
   var userID = req.user;
@@ -70,14 +72,22 @@ function populateSearch(req, res, next) {
 }
 
 function fetchReplay(req, res, next) {
-  prismata.getReplay(req.params.replayID, function(error, replay) {
+  db.Replay.getOrFetchReplay(req.params.replayID, function(error, replay) {
     if (replay) {
-      res.locals.replays.push(replay);
+      res.locals.replay = replay;
+      replay.popularity += replay.popularity + 1;
+      replay.save(function(err) {
+        if (err) {
+          res.locals.errors.push(err.message);
+        }
+        next();
+      });
+    } else {
+      if (error) {
+        res.locals.errors.push(error.message);
+      }
+      next();
     }
-    if (error) {
-      res.locals.errors.push(error.message);
-    }
-    next();
   });
 }
 
@@ -93,14 +103,34 @@ function getComments(req, res, next) {
     });
 }
 
-function getAllReplays(req, res, next) {
-  db.Replay.find({}, null, {sort: {date: -1}}, function(error, replays) {
+function getPopularReplays(req, res, next) {
+  var onFind = function(error, replays) {
     if (error) {
       res.locals.errors.push(error.message);
     }
-    res.locals.replays = replays;
-    next()
-  });
+    res.locals.popularReplays = replays;
+    next();
+  };
+
+  db.Replay.find({})
+    .sort({popularity: -1})
+    .limit(5)
+    .exec(onFind); 
+}
+
+function getRecentReplays(req, res, next) {
+  var onFind = function(error, replays) {
+    if (error) {
+      res.locals.errors.push(error.message);
+    }
+    res.locals.recentReplays = replays;
+    next();
+  };
+
+  db.Replay.find({})
+    .sort({date: -1})
+    .limit(5)
+    .exec(onFind);
 }
 
 function getUserId(email, delivery, callback, req) {
@@ -111,7 +141,7 @@ function getUserId(email, delivery, callback, req) {
 
 router.use(setUp);
 
-router.get("/", getAllReplays, function(req, res) {
+router.get("/", getPopularReplays, getRecentReplays, function(req, res) {
   res.render("index", res.locals);
 });
 

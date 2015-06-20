@@ -1,14 +1,12 @@
 var http = require('http');
 var zlib = require("zlib");
-var db = require("./db");
 
 const replay_url = require("./config.json").prismataReplaysLocation;
 
 // Takes in the raw JSON string we get from the server and create a more useful object.
 function rawToReplay(rawString) {
   var json = JSON.parse(rawString);
-  var replay = new db.Replay({});
-  
+  var replay = {};
   replay.code = json.code;
   replay.players = [];
   for (var i = 0; i < json.playerInfo.length; ++i) {
@@ -21,6 +19,9 @@ function rawToReplay(rawString) {
   replay.date = new Date(1000 * json.startTime);
   replay.duration = json.endTime - json.startTime;
   replay.length = json.commandInfo.moveDurations.length - 1;
+  
+  // We assume both players have the same time controls.
+  replay.timeControls = json.timeInfo.playerTime[0].increment;
 
   // We assume both players have the same random cards.
   replay.randomCards = json.deckInfo.randomizer[0];
@@ -43,32 +44,6 @@ function getUIName(name, mergedDeck) {
   return name;
 }
 
-// Fetches the replay from the prismata service and updates the database.
-// The callback will be passed the error (null if no errors) and the replay fetched.
-function fetchReplay(replayID, callback) {
-  var options = {
-    host: replay_url,
-    port: 80,
-    path: '/' + replayID + ".json.gz"
-  };
-
-  http.get(options, function(res) {
-    if (res.statusCode == 200) {
-      unzip(res, function(raw) {
-        var replay = rawToReplay(raw);
-        db.Replay.upsert(replay, function(error) {
-          callback(error, replay);
-        });
-      });
-    } else {
-      var error = new Error("Replay \"" + replayID + "\" not found.");
-      callback(error, null);
-    }
-  }).on('error', function(error) {
-    callback(error, null);
-  });
-}
-
 // Takes in a response containing a .gz file and return the contents.
 function unzip(response, callback) {
   var buffer = [];
@@ -81,17 +56,26 @@ function unzip(response, callback) {
   });
 }
 
-// Get the replay with the specified id.
-// If the replay is not already in the database, this will fetch it from the prismata service and
-// update the database with the newly fetched replay.
-// The callback will be passed an error (if any) and the replay requested.
-exports.getReplay = function(replayCode, callback) {
-  db.Replay.findOne({code: replayCode}, function(error, replay) {
-    if (error || replay) {
-      callback(error, replay);
+// Fetches the replay from the prismata service and updates the database.
+// The callback will be passed the error (null if no errors) and the replay fetched.
+exports.fetchReplay = function(replayID, callback) {
+  var options = {
+    host: replay_url,
+    port: 80,
+    path: '/' + replayID + ".json.gz"
+  };
+  http.get(options, function(res) {
+    if (res.statusCode == 200) {
+      unzip(res, function(raw) {
+        var replay = rawToReplay(raw);
+        callback(error, replay);
+      });
     } else {
-      fetchReplay(replayCode, callback);
+      var error = new Error("Replay \"" + replayID + "\" not found.");
+      callback(error, null);
     }
+  }).on('error', function(error) {
+    callback(error, null);
   });
-};
+}
 

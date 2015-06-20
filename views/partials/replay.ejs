@@ -1,9 +1,10 @@
-<div onclick="onReplayClick('<%= replay.code %>');" class="replay">
-      <h3><%= replay.players[0].name + ' (' + replay.players[0].rating + ') vs. ' +
-              replay.players[1].name + ' (' + replay.players[1].rating + ')'%></h3>
-      Replay Code: <%-'<a onclick="stopPropagation()" target="_blank" href="http://play.prismata.net/?r=' + replay.code +'">' + replay.code +
+<div class="replay">
+      <h3><a href="/replay/<%= replay.code %>"><%= replay.players[0].name + ' (' + replay.players[0].rating + ') vs. ' +
+              replay.players[1].name + ' (' + replay.players[1].rating + ')'%></a></h3>
+      Replay Code: <%-'<a target="_blank" href="http://play.prismata.net/?r=' + replay.code +'">' + replay.code +
       '</a> <br>' %>
       <% for (var i = 0; i < replay.randomCards.length; ++i) { %><% if (i != 0) { %>, <% } %><%-replay.randomCards[i]%><% } %> <br>
+      Time Controls: <%= replay.timeControls %>s <br>
       Winner: <% if (replay.result == 0 || replay.result == 1) { %><%= replay.players[replay.result].name %><% } else { %>DRAW<% } %> <br>
       Number of Turns: <%= replay.length %> <br><br>
       <em><%= replay.date %></em>

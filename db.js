@@ -68,28 +68,115 @@ var commentSchema = Schema({
 exports.Comment = mongoose.model(commentModelName, commentSchema);
 
 // --- Replays ---
+var Prismata = require("./prismata");
+
 var playerSchema = Schema({
   name: String,
   rating: Number
 });
 
+
+const LAST_REPLAY_SCHEMA_CHANGE = new Date(2015, 5, 20);
 var replaySchema = Schema({
+  // Replay Data
   code: String,
   players: [playerSchema],
   result: Number,
   date: Date,
   duration: Number,
   length: Number,
+  timeControls: Number,
   randomCards: [String],
+  // Meta data
+  lastUpdated: Date,
+  dateAdded: Date,
+  popularity: Number
 });
 
 // Statics
-// callback - function(error)
-replaySchema.statics.upsert = function(replay, callback) {
-  var upsertData = replay.toObject();
-  delete upsertData._id;
-  this.update({_id: replay.id}, upsertData, {upsert: true}, callback);
+// callback - function(error, replay)
+replaySchema.statics.getOrFetchReplay = function(replayCode, callback) {
+  self = this;
+  var onReplayFetch = function(error, replayData) {
+    if (error) {
+      callback(error, null);
+    } else {
+      var replay = new self(replayData);
+      var now = Date.now();
+      replay.lastUpdated = now;
+      replay.dateAdded = now;
+      replay.popularity = 1;
+      replay.save(function(err) {
+        callback(err, replay);
+      });
+    }
+  };
+
+  var onFind = function (error, replay) {
+    if (error || replay) {
+      callback(error, replay);
+    } else {
+      Prismata.fetchReplay(replayCode, onReplayFetch);
+    }
+  };
+  
+  this.findOne({code: replayCode}, onFind);
 };
+
+// callback - function(error)
+replaySchema.statics.syncAllOutdatedReplays = function(callback) {
+  var syncReplay = function(replay) {
+    // TODO: Better error handling
+    replay.syncWithPrismata(function(error) {
+      if (error) {
+        console.log(error);
+      }
+    });
+  }
+
+  this.find({lastUpdated: {$lt: LAST_REPLAY_SCHEMA_CHANGE}}).stream()
+    .on("data", syncReplay)
+    .on("error", callback)
+    .on("end", function() {
+      callback(null);
+    });
+};
+
+// callback - function(error)
+replaySchema.statics.modifyPopularityOfAllReplays = function(factor, callback) {
+  var modifyPopularity = function(replay) {
+    // TODO: Better error handling
+    replay.popularity = replay.popularity * factor;
+    replay.save(function(error) {
+      if (error) {
+        console.log(error);
+      }
+    });
+  }
+
+  this.find({}).stream()
+    .on("data", modifyPopularity)
+    .on("error", callback)
+    .on("end", function() {
+      callback(null);
+    });
+};
+
+// Methods
+// callback - function(error)
+replaySchema.methods.syncWithPrismata = function(callback) {
+  self = this;
+  
+  var onFetch = function(error, replayData) {
+    console.log("Fetched replay: " + replayData.code);
+    replayData.lastUpdated = Date.now();
+    var filter = {code: replayData.code};
+    var options = {upsert: true};
+    self.model(replayModelName).update(filter, replayData, options, callback);
+  };
+ 
+  Prismata.fetchReplay(self.code, onFetch);
+}
 
 exports.Replay = mongoose.model(replayModelName, replaySchema);
 

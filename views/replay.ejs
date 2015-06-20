@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-  <% var title = "Prismata Replays : "; var replay = null; if (replays.length == 1) { replay = replays[0]; title += replay.code; } else { title += "Error"; } %><%- include partials/header.ejs %>
+  <% var title = "Prismata Replays : "; if (replay) { title += replay.code; } else { title += "Error"; } %><%- include partials/header.ejs %>
   <body>
     <%- include partials/navigation_bar.ejs %>
     <h1>Prismata Replays : <% if (replay) { %><%- '<a href="http://play.prismata.net/?r=' + replay.code + '" target="_blank"">' + replay.code + '</a>' %><% } else { %>Error<% } %> </h1>

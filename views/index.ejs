@@ -2,11 +2,17 @@
 <html lang="en">
   <% var title = "Prismata Replays" %><%- include partials/header.ejs %>
   <body>
-    <%- include partials/navigation_bar.ejs %> 
+    <%- include partials/navigation_bar.ejs %>
     <h1><%= title %></h1>
+   
     Replay Code: <input id="replayCode" type="text" maxlength="11">
     <button onclick="addReplay()">Add Replay</button>
-    <div class="error" id="replayCodeError"></div><% for (i = 0; i < replays.length; ++i) { var replay = replays[i]; %> 
+    <div class="error" id="replayCodeError"></div>
+    <h2>Popular:</h2>
+    <% for (i = 0; i < popularReplays.length; ++i) { var replay = popularReplays[i]; %> 
+    <%- include partials/replay.ejs %><% } %>
+    <h2>Recent:</h2>
+    <% for (i = 0; i < recentReplays.length; ++i) { var replay = recentReplays[i]; %> 
     <%- include partials/replay.ejs %><% } %>
     <%- include partials/errors.ejs %>
   </body>
