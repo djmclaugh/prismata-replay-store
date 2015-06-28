@@ -1,11 +1,23 @@
-<div class="replay">
-      <h3><a href="/replay/<%= replay.code %>"><%= replay.players[0].name + ' (' + replay.players[0].rating + ') vs. ' +
-              replay.players[1].name + ' (' + replay.players[1].rating + ')'%></a></h3>
+<div class="replay"> <% var gameTitle = "";
+if (replay.result == 0) {
+  gameTitle += "*";
+}
+gameTitle += replay.players[0].name + " (" + replay.players[0].rating + ")" + " vs. " 
+if (replay.result == 1) {
+  gameTitle += "*";
+}
+gameTitle += replay.players[1].name + " (" + replay.players[1].rating + ")";
+var seconds = "" + Math.round(replay.duration) % 60;
+if (seconds.length == 1) {
+  seconds = "0" + seconds;
+}
+var durationString = Math.floor(replay.duration / 60) + ":" + seconds;  %> 
+      <h3><%= gameTitle %></h3>
       Replay Code: <%-'<a target="_blank" href="http://play.prismata.net/?r=' + replay.code +'">' + replay.code +
       '</a> <br>' %>
       <% for (var i = 0; i < replay.randomCards.length; ++i) { %><% if (i != 0) { %>, <% } %><%-replay.randomCards[i]%><% } %> <br>
       Time Controls: <%= replay.timeControls %>s <br>
-      Winner: <% if (replay.result == 0 || replay.result == 1) { %><%= replay.players[replay.result].name %><% } else { %>DRAW<% } %> <br>
-      Number of Turns: <%= replay.length %> <br><br>
+      Number of Turns: <%= replay.length %> <br>
+      Duration: <%= durationString %> <br><br>
       <em><%= replay.date %></em>
     </div>

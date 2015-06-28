@@ -145,6 +145,7 @@ router.get("/", getPopularReplays, getRecentReplays, function(req, res) {
   res.render("index", res.locals);
 });
 
+/* No login version. Uncomment once login enabled.
 router.get("/login", function(req, res) {
   res.render("login");
 });
@@ -156,6 +157,7 @@ router.get("/logout", passwordless.logout(), function(req, res) {
 router.post("/sendtoken", passwordless.requestToken(getUserId), function(req, res) {
   res.redirect("/");
 });
+*/
 
 router.get("/search", populateSearch, function(req, res) {
   res.render("search", res.locals);
@@ -167,9 +169,15 @@ router.post("/search", function(req, res) {
 });
 
 router.get("/replay/:replayID", fetchReplay, getComments, function(req, res) {
-  res.render("replay", res.locals);
+  // No login version. Fix once login enabled.
+  if (res.locals.errors.length > 0) {
+    res.render("replay", res.locals);
+  } else {
+    res.redirect("/");
+  }
 });
 
+/* No Login version. Uncomment once login enabled.
 router.post("/replay/:replayID", function(req, res) {
   var comment = {
     user: res.locals.user,
@@ -184,6 +192,7 @@ router.post("/replay/:replayID", function(req, res) {
   });
 });
 
+
 router.get("/settings", function(req, res) {
   res.render("user_settings");
 });
@@ -196,6 +205,7 @@ router.post("/settings", function(req, res) {
     res.redirect(303, "/settings");
   });
 });
+*/
 
 module.exports = router;
 
