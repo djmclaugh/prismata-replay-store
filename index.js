@@ -55,5 +55,5 @@ setInterval(function() {
   db.Replay.modifyPopularityOfAllReplays(0.9, function() {});
 }, 1000 * 60 * 60);
 
-app.listen(8080);
+app.listen(config.port);
 

@@ -1,4 +1,5 @@
 {
+  "port": "The port this app should be listening",
   "appURL": "The URL for this app - used when generating the email for login",
   "databaseLocation": "The location of the mongo database",
   "prismataReplaysLocation": "The location of the prismata service to fetch replays",
