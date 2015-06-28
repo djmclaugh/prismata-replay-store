@@ -128,7 +128,7 @@ function getRecentReplays(req, res, next) {
   };
 
   db.Replay.find({})
-    .sort({date: -1})
+    .sort({dateAdded: -1})
     .limit(5)
     .exec(onFind);
 }
