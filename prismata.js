@@ -57,7 +57,7 @@ function unzip(response, callback) {
 }
 
 // Fetches the replay from the prismata service and updates the database.
-// The callback will be passed the error (null if no errors) and the replay fetched.
+// callback - function(error, replay) 
 exports.fetchReplay = function(replayID, callback) {
   var options = {
     host: replay_url,
@@ -67,8 +67,7 @@ exports.fetchReplay = function(replayID, callback) {
   http.get(options, function(res) {
     if (res.statusCode == 200) {
       unzip(res, function(raw) {
-        var replay = rawToReplay(raw);
-        callback(error, replay);
+        callback(null, rawToReplay(raw));
       });
     } else {
       var error = new Error("Replay \"" + replayID + "\" not found.");

@@ -145,7 +145,7 @@ router.post("/search", function(req, res) {
 });
 
 router.get("/replay/:replayID", fetchReplay, getComments, function(req, res) {
-  if (res.locals.errors) {
+  if (res.locals.errors.length > 0) {
     res.render("replay", res.locals);
   } else {
     res.redirect(303, "/");
@@ -181,6 +181,10 @@ router.post("/settings", function(req, res) {
   });
 });
 */
+
+router.get("/about", function(req, res) {
+  res.render("about");
+});
 
 module.exports = router;
 
