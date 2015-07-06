@@ -56,4 +56,5 @@ setInterval(function() {
 }, 1000 * 60 * 60);
 
 app.listen(config.port);
+console.log("Prismata Replays started on port " + config.port + ".");
 

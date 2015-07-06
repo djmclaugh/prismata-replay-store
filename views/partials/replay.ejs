@@ -15,7 +15,10 @@ var durationString = Math.floor(replay.duration / 60) + ":" + seconds;  %>
       <h3><%= gameTitle %></h3>
       Replay Code: <%-'<a target="_blank" href="http://play.prismata.net/?r=' + replay.code +'">' + replay.code +
       '</a> <br>' %>
-      <% for (var i = 0; i < replay.randomCards.length; ++i) { %><% if (i != 0) { %>, <% } %><%-replay.randomCards[i]%><% } %> <br>
+      <% for (var i = 0; i < replay.randomCards.length; ++i) { %> 
+      <img width=50 height=50 src="/images/unit_portraits/<%= replay.randomCards[i].replace(/ /g,'') %>.png" alt="<%= replay.randomCards[i] %>" title="<%= replay.randomCards[i] %>">
+      <% } %>
+      <br>
       Time Controls: <%= replay.timeControls %>s <br>
       Number of Turns: <%= replay.length %> <br>
       Duration: <%= durationString %> <br><br>

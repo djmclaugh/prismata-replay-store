@@ -4,16 +4,31 @@
   <body>
     <%- include partials/navigation_bar.ejs %>
     <h1><%= title %></h1>
-    <form action="/search" method="POST">
-      Contains player: <input name="player" type="text"> <br>
-      Minimum rating: <input name="min_rating" type="number"> <br>
-      Maximum rating: <input name="max_rating" type="number"> <br> <br>
-      Contains units: <input name="units" type="text" size="30"> <br>
-      (Seperate units using a comma. Example: "Husk, Wild Drone, Shadowfang")<br> <br>
+    
+    <form action="/search" method="POST" class="search_form">
+      <label for="player">Contains player:</label>
+      <input id="player" name="player" value="<%= search.player %>"  type="text"> <br>
+      <label for="min_rating">Rating:</label>
+      <input id="min_rating" name="min_rating" value="<%= search.min_rating %>" type="number" min="0" max="9999" placeholder="min"> - 
+      <input id="max_rating" name="max_rating" value="<%= search.max_rating %>" type="number" min="0" max="9999" placeholder="max"> <br>
+      <label for="min_time_controls">Time controls (in seconds):</label>
+      <input id="min_time_controls" name="min_time_controls" value="<%= search.min_time_controls %>" type="number" min="0" max="90" placeholder="min"> - 
+      <input id="max_time_controls" name="max_time_controls" value="<%= search.max_time_controls %>"type="number" min="0" max="90" placeholder="max"> <br>
+      <label for="min_length">Number of turns:</label>
+      <input id="min_length" name="min_length" type="number" value="<%= search.min_length %>" min="0" placeholder="min"> -
+      <input id="max_length" name="max_length" type="number" value="<%= search.max_length %>" min="0" placeholder="max"> <br>
+      <label for="min_duration_minutes">Duration (in minutes):</label>
+      <input id="min_duration_minutes" name="min_duration_minutes" value="<%= search.min_duration_minutes %>" type="number" min="0" placeholder="min" step="any"> -
+      <input id="max_duration_minutes" name="max_duration_minutes" value="<%= search.max_duration_minutes %>" type="number" min="0" placeholder="max"step="any"> <br>
+      <label for="units">Contains units:</label>
+      <input id="units" name="units" value="<%= search.units %>" type="text" size="30" placeholder="Ex: Husk, Wild Drone, Pixie"> <br>
       <input type="submit" value="Search">
     </form>
+
+    <% if (replays.length > 1) { %><p><%= replays.length %> replays found</p> <% } %>
     <% for (i = 0; i < replays.length; ++i) { var replay = replays[i]; %>
     <%- include partials/replay.ejs %><% } %>
     <%- include partials/errors.ejs %>
+
   </body>
 </html>

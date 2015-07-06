@@ -123,6 +123,77 @@ replaySchema.statics.getOrFetchReplay = function(replayCode, callback) {
   this.findOne({code: replayCode}, onFind);
 };
 
+// search - object {
+//   player,
+//   min_rating, 
+//   max_rating, 
+//   min_time_controls, 
+//   max_time_controls,
+//   min_length,
+//   max_length,
+//   min_duration_minutes,
+//   max_duration_minutes,
+//   units
+// }
+// callback - function(error, replays)
+replaySchema.statics.search = function(search, callback) {
+  var filter = {};
+  
+  if (search.player && typeof search.player == "string") {
+    filter["players.name"] = search.player;
+  }
+
+  var min;
+  var max;
+
+  if (search.min_rating || search.max_rating) {
+    min = search.min_rating ? Number(search.min_rating) : 0;
+    max = search.max_rating ? Number(search.max_rating) : Number.MAX_VALUE;
+    filter["players"] =
+        {$not: {$elemMatch: {$or: [{rating: {$lt: min}}, {rating: {$gt: max}}]}}};
+  }
+
+  if (search.min_time_controls || search.max_time_controls) {
+    min = search.min_time_controls ? Number(search.min_time_controls) : 0;
+    max = search.max_time_controls ? Number(search.max_time_controls) : Number.MAX_VALUE;
+    filter["timeControls"] = {$lte: max, $gte:min};
+  }
+
+  if (search.min_length || search.max_length) {
+    min = search.min_length ? Number(search.min_length) : 0;
+    max = search.max_length ? Number(search.max_length) : Number.MAX_VALUE;
+    filter["length"] = {$lte: max, $gte:min};
+  }
+
+  if (search.min_duration_minutes || search.max_duration_minutes) {
+    min = search.min_duration_minutes ? Number(search.min_duration_minutes) * 60 : 0;
+    max = search.max_duration_minutes ? Number(search.max_duration_minutes) * 60 : Number.MAX_VALUE;
+    filter["duration"] = {$lte: max, $gte:min};
+  }
+
+
+  if (search.units && typeof search.units == "string") {
+    filter["randomCards"] = {$all: normalizeUnitNames(search.units)};
+  }
+
+  this.find(filter, null, {sort: {date: -1}}, function(error, replays) {
+    callback(error, replays);
+  });
+}
+
+function normalizeUnitNames(unitsString) {
+  var units = unitsString.split(",");
+  for (var i = 0; i < units.length; ++i) {
+    // Remove whitespace.
+    units[i]  = units[i].trim();
+    // Normalize capitalization.
+    units[i] = units[i].replace(/\w+/g, function(txt) {
+      return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+    });
+  }
+  return units;
+}
+
 // callback - function(error)
 replaySchema.statics.syncAllOutdatedReplays = function(callback) {
   var syncReplay = function(replay) {
