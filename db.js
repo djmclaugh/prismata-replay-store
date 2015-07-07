@@ -76,12 +76,13 @@ var playerSchema = Schema({
 });
 
 
-const LAST_REPLAY_SCHEMA_CHANGE = new Date(2015, 5, 20);
+const LAST_REPLAY_SCHEMA_CHANGE = new Date(2015, 6, 5);
 var replaySchema = Schema({
   // Replay Data
   code: String,
   players: [playerSchema],
   result: Number,
+  rated: Boolean,
   date: Date,
   duration: Number,
   length: Number,
@@ -137,6 +138,7 @@ replaySchema.statics.getOrFetchReplay = function(replayCode, callback) {
 // }
 // callback - function(error, replays)
 replaySchema.statics.search = function(search, callback) {
+  console.log(search);
   var filter = {};
   
   if (search.player && typeof search.player == "string") {
@@ -174,6 +176,14 @@ replaySchema.statics.search = function(search, callback) {
 
   if (search.units && typeof search.units == "string") {
     filter["randomCards"] = {$all: normalizeUnitNames(search.units)};
+  }
+
+  if (search.include_rated && !search.include_unrated) {
+    filter["rated"] = true;
+  } else if (!search.include_rated && search.include_unrated) {
+    filter["rated"] = false;
+  } else if (!search.include_rated && !search.include_unrated) {
+    callback(null, []);
   }
 
   this.find(filter, null, {sort: {date: -1}}, function(error, replays) {
@@ -239,7 +249,6 @@ replaySchema.methods.syncWithPrismata = function(callback) {
   self = this;
   
   var onFetch = function(error, replayData) {
-    console.log("Fetched replay: " + replayData.code);
     replayData.lastUpdated = Date.now();
     var filter = {code: replayData.code};
     var options = {upsert: true};

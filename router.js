@@ -31,6 +31,8 @@ function populateSearch(req, res, next) {
   
   if (!search) {
     res.locals.search = {};
+    res.locals.search.include_rated = true;
+    res.locals.search.include_unrated = true;
     next();
     return;
   }

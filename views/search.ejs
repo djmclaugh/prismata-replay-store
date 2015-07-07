@@ -6,22 +6,41 @@
     <h1><%= title %></h1>
     
     <form action="/search" method="POST" class="search_form">
-      <label for="player">Contains player:</label>
-      <input id="player" name="player" value="<%= search.player %>"  type="text"> <br>
-      <label for="min_rating">Rating:</label>
-      <input id="min_rating" name="min_rating" value="<%= search.min_rating %>" type="number" min="0" max="9999" placeholder="min"> - 
-      <input id="max_rating" name="max_rating" value="<%= search.max_rating %>" type="number" min="0" max="9999" placeholder="max"> <br>
-      <label for="min_time_controls">Time controls (in seconds):</label>
-      <input id="min_time_controls" name="min_time_controls" value="<%= search.min_time_controls %>" type="number" min="0" max="90" placeholder="min"> - 
-      <input id="max_time_controls" name="max_time_controls" value="<%= search.max_time_controls %>"type="number" min="0" max="90" placeholder="max"> <br>
-      <label for="min_length">Number of turns:</label>
-      <input id="min_length" name="min_length" type="number" value="<%= search.min_length %>" min="0" placeholder="min"> -
-      <input id="max_length" name="max_length" type="number" value="<%= search.max_length %>" min="0" placeholder="max"> <br>
-      <label for="min_duration_minutes">Duration (in minutes):</label>
-      <input id="min_duration_minutes" name="min_duration_minutes" value="<%= search.min_duration_minutes %>" type="number" min="0" placeholder="min" step="any"> -
-      <input id="max_duration_minutes" name="max_duration_minutes" value="<%= search.max_duration_minutes %>" type="number" min="0" placeholder="max"step="any"> <br>
-      <label for="units">Contains units:</label>
-      <input id="units" name="units" value="<%= search.units %>" type="text" size="30" placeholder="Ex: Husk, Wild Drone, Pixie"> <br>
+      <div class="field">
+        <label for="player">Contains player:</label>
+        <input id="player" name="player" value="<%= search.player %>"  type="text">
+      </div>
+      <div class="field">
+        <label for="min_rating">Player Ratings:</label>
+        <input id="min_rating" name="min_rating" value="<%= search.min_rating %>" type="number" min="0" max="9999" placeholder="min"> - 
+        <input id="max_rating" name="max_rating" value="<%= search.max_rating %>" type="number" min="0" max="9999" placeholder="max">
+      </div>
+      <div class="field">
+        <label for="min_time_controls">Time controls (in seconds):</label>
+        <input id="min_time_controls" name="min_time_controls" value="<%= search.min_time_controls %>" type="number" min="0" max="999" placeholder="min"> - 
+        <input id="max_time_controls" name="max_time_controls" value="<%= search.max_time_controls %>"type="number" min="0" max="999" placeholder="max">
+      </div>
+      <div class="field">
+        <label for="min_length">Number of turns:</label>
+        <input id="min_length" name="min_length" type="number" value="<%= search.min_length %>" min="0" placeholder="min"> -
+        <input id="max_length" name="max_length" type="number" value="<%= search.max_length %>" min="0" placeholder="max">
+      </div>
+      <div class="field">
+        <label for="min_duration_minutes">Duration (in minutes):</label>
+        <input id="min_duration_minutes" name="min_duration_minutes" value="<%= search.min_duration_minutes %>" type="number" min="0" placeholder="min" step="any"> -
+        <input id="max_duration_minutes" name="max_duration_minutes" value="<%= search.max_duration_minutes %>" type="number" min="0" placeholder="max"step="any">
+      </div>
+      <div class="field">
+        <label for="units">Contains units:</label>
+        <input id="units" name="units" value="<%= search.units %>" type="text" size="30" placeholder="Ex: Husk, Wild Drone, Pixie">
+      </div>
+      <div class="field">
+        <label>Include:</label>
+        <input type="checkbox" name="include_rated" value="true" <%= search.include_rated ? "checked" : ""%>>Arena Games
+        <input type="checkbox" name="include_unrated" value="true" <%= search.include_unrated ? "checked" : ""%>>Unrated Games
+      </div>
+      <br>
+      <br>
       <input type="submit" value="Search">
     </form>
 

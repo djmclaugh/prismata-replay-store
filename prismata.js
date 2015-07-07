@@ -16,6 +16,7 @@ function rawToReplay(rawString) {
     });
   }
   replay.result = json.result;
+  replay.rated = json.ratingInfo.ratedGame;
   replay.date = new Date(1000 * json.startTime);
   replay.duration = json.endTime - json.startTime;
   replay.length = json.commandInfo.moveDurations.length - 1;

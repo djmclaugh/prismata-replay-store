@@ -51,9 +51,16 @@ app.use(passwordless.acceptToken({ successRedirect: "/"}));
 
 app.use(require("./router"));
 
-setInterval(function() {
-  db.Replay.modifyPopularityOfAllReplays(0.9, function() {});
-}, 1000 * 60 * 60);
+db.Replay.syncAllOutdatedReplays(function(error) {
+  if (error) {
+    console.log("Error while syncing outdated replays - " + error);
+  }
+});
+
+// Not needed until popularity can actually be increased
+//setInterval(function() {
+//  db.Replay.modifyPopularityOfAllReplays(0.9, function() {});
+//}, 1000 * 60 * 60);
 
 app.listen(config.port);
 console.log("Prismata Replays started on port " + config.port + ".");
