@@ -173,9 +173,24 @@ replaySchema.statics.search = function(search, callback) {
     filter["duration"] = {$lte: max, $gte:min};
   }
 
-
   if (search.units && typeof search.units == "string") {
-    filter["randomCards"] = {$all: normalizeUnitNames(search.units)};
+    var units = normalizeUnitNames(search.units);
+    var requiredUnits = [];
+    var excludedUnits = [];
+    for (var i = 0; i < units.length; ++i) {
+      if (units[i].charAt(0) == "!") {
+        excludedUnits.push(units[i].substr(1));
+      } else {
+        requiredUnits.push(units[i]);
+      }
+    }
+    filter["randomCards"] = {};
+    if (excludedUnits.length > 0) {
+      filter["randomCards"].$not = {$in: excludedUnits};
+    }
+    if (requiredUnits.length > 0) {
+      filter["randomCards"].$all = requiredUnits;
+    }
   }
 
   if (search.include_rated && !search.include_unrated) {

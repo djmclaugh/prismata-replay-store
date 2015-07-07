@@ -40,6 +40,7 @@ function populateSearch(req, res, next) {
   db.Replay.search(search, function(error, replays) {
     if (error) {
       res.locals.errors.push(error.message);
+      console.log(error);
     }
     if (replays.length == 0) {
       res.locals.errors.push("No results found.");
