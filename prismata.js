@@ -25,24 +25,74 @@ function rawToReplay(rawString) {
   replay.timeControls = json.timeInfo.playerTime[0].increment;
 
   // We assume both players have the same random cards.
-  replay.randomCards = json.deckInfo.randomizer[0];
-  for (var i = 0; i < replay.randomCards.length; ++i) {
-    replay.randomCards[i] = getUIName(replay.randomCards[i], json.deckInfo.mergedDeck);
-  }
-
+  replay.randomCards = 
+      getUINames(json.deckInfo.randomizer[0], json.deckInfo.mergedDeck);
   return replay;
 }
 
-// The replay data uses the internal names to describe cards.
-// The card info, including the UI names, are only available in the deckInfo.mergedDeck property.
-function getUIName(name, mergedDeck) {
-  for (var i = 0; i < mergedDeck.length; ++i) {
-    var card = mergedDeck[i];
-    if (card.name == name) {
-      return card.UIName || name;
+// Given a list of legacy names, return the list of UINames sorted by cost.
+function getUINames(legacyNames, mergedDeck) {
+  // Get the units coresponding to the legacy names.
+  var units = [];
+  for (var i = 0; i < legacyNames.length; ++i) {
+    name = legacyNames[i];
+    for (var j = 0; j < mergedDeck.length; ++j) {
+      var card = mergedDeck[j];
+      if (card.name == name) {
+        var unit = {};
+        unit.name = card.UIName || name;
+        unit.cost = card.buyCost;
+        units.push(unit);
+      }
     }
   }
-  return name;
+
+  // Sort the units based on their cost.
+  units.sort(function(a, b) {
+    // Green
+    aHasG = (a.cost.indexOf("G") != -1);
+    bHasG = (b.cost.indexOf("G") != -1);
+    // Blue
+    aHasB = (a.cost.indexOf("B") != -1);
+    bHasB = (b.cost.indexOf("B") != -1);
+    // Red - Red is denoted by C in the replay data.
+    aHasR = (a.cost.indexOf("C") != -1);
+    bHasR = (b.cost.indexOf("C") != -1);
+    // Gold
+    aGold = parseInt(a.cost, 10);
+    bGold = parseInt(b.cost, 10);
+
+    aNumTech = aHasG + aHasB + aHasR;
+    bNumTech = bHasG + bHasB + bHasR;
+    
+    // The unit that needs more different techs to buy should go later. 
+    if (aNumTech != bNumTech) {
+      return aNumTech - bNumTech;
+    }
+    
+    // G < B < R and GB < GR < BR.
+    if (aHasR != bHasR) {
+      return aHasR ? 1 : -1;
+    }
+    if (aHasB != bHasB) {
+      return aHasB ? 1 : -1;
+    }
+
+    // If everything so far is the same, sort by gold cost.
+    if (aGold != bGold) {
+      return aGold - bGold;
+    }
+
+    // As a final resort, sort by the name of the unit.
+    return a.name.localeCompare(b.name);
+  });
+
+  // We only want the names
+  var names = [];
+  for (var i = 0; i < units.length; ++i) {
+    names.push(units[i].name);
+  }
+  return names;
 }
 
 // Takes in a response containing a .gz file and return the contents.

@@ -76,7 +76,7 @@ var playerSchema = Schema({
 });
 
 
-const LAST_REPLAY_SCHEMA_CHANGE = new Date(2015, 6, 5);
+const LAST_REPLAY_SCHEMA_CHANGE = new Date(2015, 6, 13);
 var replaySchema = Schema({
   // Replay Data
   code: String,
@@ -138,6 +138,7 @@ replaySchema.statics.getOrFetchReplay = function(replayCode, callback) {
 // }
 // callback - function(error, replays)
 replaySchema.statics.search = function(search, callback) {
+  console.log("Search queary: " + new Date().toISOString());
   console.log(search);
   var filter = {};
   
@@ -223,6 +224,7 @@ function normalizeUnitNames(unitsString) {
 replaySchema.statics.syncAllOutdatedReplays = function(callback) {
   var syncReplay = function(replay) {
     // TODO: Better error handling
+    console.log("Updating information for replay " + replay.code);
     replay.syncWithPrismata(function(error) {
       if (error) {
         console.log(error);
