@@ -1,2 +1,3 @@
-<%= comment.user.username %>: <%= comment.message %> <br>
-<i><%= comment.date %></i> <br>
+<strong><%= comment.user.username %></strong>: <%= comment.message %> <br>
+<%- include ../utilities.ejs -%>
+    <i><%= dateToString(comment.date) %></i> <br>

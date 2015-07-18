@@ -10,13 +10,14 @@ const replayModelName = "Replay";
 // --- Users ---
 var userSchema = Schema({
   username: String,
-  email: String
+  email: {type: String, lowercase: true}
 });
 
 // Statics
 // callback - function(error, user)
 userSchema.statics.getOrCreateWithEmail = function (email, callback) {
   var self = this;
+  email = email.toLowerCase();
   // Pass the user to the callback if it exists.
   // If the user doesn't exist, create a new one and pass it to the callback
   var onLookup = function(error, user) {
@@ -61,7 +62,7 @@ exports.User = mongoose.model(userModelName, userSchema);
 var commentSchema = Schema({
   user: {type: Schema.Types.ObjectId, ref: userModelName},
   replayCode: String,
-  message: String,
+  message: {type: String, minlength: 1},
   date: {type: Date, default: Date.now}
 });
 

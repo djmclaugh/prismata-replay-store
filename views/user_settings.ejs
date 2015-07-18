@@ -2,14 +2,17 @@
 <html lang="en">
   <% var title = "Prismata Replays : User Settings" %> <%- include partials/header.ejs %>
   <body>
-    <h1><%= title %></h1>
-    
-    <%- include partials/navigation_bar.ejs %>
-    <% if (user) { %><form action="" method="POST">
-      Associated email address: <%= user.email %> <br>
-      Current Username: <%= user.username %> <br> <br>
-      Desired Username: <input name="new_username" type="text" maxlength="20"> <br>
-      <input type="submit" value="Change Username">
+    <h1><%= title %></h1>    
+    <%- include partials/navigation_bar.ejs -%>
+<% if (user) { -%>
+      <form action="" method="POST">
+        <p>Associated email address: <%= user.email %></p>
+        <p>Current Username: <%= user.username %></p> <br>
+        <p>
+          <label for="new_username">Desired Username:</label>
+          <input name="new_username" type="text" maxlength="20">
+        </p>
+        <p><input type="submit" value="Change Username"></p>
     </form>
     <% } else { %>
       <p>You must be logged in to access your settings.</p>

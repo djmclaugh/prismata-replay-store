@@ -12,7 +12,7 @@ a[href^="https://"]:after {
 }
 */
 
-h1 {
+h1, h2 {
   text-align: center;
 }
 
@@ -20,6 +20,19 @@ p {
   padding-left:10%;
   padding-right:10%;
   text-align: center;
+}
+
+.center_hack iframe {
+  display: block;
+  margin: 0 auto;
+}
+
+.center_hack {
+  width: 1000px;
+  position: relative;
+  left: 50%;
+  top: 0;
+  margin-left: -526px;
 }
 
 .search_form {
@@ -61,12 +74,18 @@ p {
   top: 20px;
 }
 
+.replays_container {
+  text-align: center;
+}
+
 .replay {
+  text-align: center;
   background-color: #F9F9F9;
   border: 1px solid #DDDDDD;
   border-radius: 6px 6px 6px 6px;
   padding: 5px;
   margin-top: 5px;
   margin-bottom: 5px;
+  display: inline-block;
 }
 

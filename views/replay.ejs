@@ -1,26 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
-  <% var title = "Prismata Replays : "; if (replay) { title += replay.code; } else { title += "Error"; } %><%- include partials/header.ejs %>
+  <%- include utilities.ejs -%>
+  <% var title = "Prismata Replays : "; if (replay) { title += replay.code; } else { title += "Error"; } -%>
+  
+  <%- include partials/header.ejs -%>
+  
   <body>
     <%- include partials/navigation_bar.ejs %>
-    <h1>Prismata Replays : <% if (replay) { %><%- '<a href="http://play.prismata.net/?r=' + replay.code + '" target="_blank"">' + replay.code + '</a>' %><% } else { %>Error<% } %> </h1>
-    <% if (replay) { %>
-    <%- replay.players[0].name + ' (' + replay.players[0].rating + ') vs. ' +
-        replay.players[1].name + ' (' + replay.players[1].rating + ')' + '<br>' %>
-    <% for (var i = 0; i < replay.randomCards.length; ++i) { %><% if (i != 0) { %>, <% } %><%-replay.randomCards[i]%><% } %> <br>
-    Winner: <% if (replay.result == 0 || replay.result == 1) { %><%= replay.players[replay.result].name %><% } else { %>DRAW<% } %> <br>
-    Number of Turns: <%= replay.length %> <br>
-    <%= replay.date %> <br> <br>
-    <% for (var i = 0; i < comments.length; ++i) { var comment = comments[i]; %>
-      <%- include partials/comment.ejs %> <br>
-    <% } %>
-      <% if (user) { %>
+    <h1><%= title  %></h1>
+<% if (replay) { -%>
+    <h2><%= replayTitle(replay) %> <br> <%= dateToString(replay.date) %></h2>
+    <p id="no_flash_message"><em>You browser doesn't have flash enabled. You need flash to be able to watch the replay.</em></p>
+    <div class="center_hack">
+      <iframe id="prismata_iframe" scrolling="no" src="http://play.prismata.net/?r=<%= replay.code %>" width="1050" height="675"></iframe>
+    </div>
+    <br>
+<% for (var i = 0; i < comments.length; ++i) { var comment = comments[i]; -%>
+    <%- include partials/comment.ejs -%>
+    <br>
+<% } -%>
+<% if (user) { -%>
     <form action="" method="POST">
-      Comment: <textarea name='comment'></textarea><br>
-      <input type="submit" value="Submit">
+      <textarea name="comment" placeholder="Comment"></textarea><br>
+      <input type="submit" value="Add comment">
     </form>
-      <% } %>
-    <% } %>
-    <%- include partials/errors.ejs %>
+<% } -%>
+<% } -%>
+    <%- include partials/errors.ejs -%>
+    <script type="text/javascript">
+      if (hasFlash()) {
+        document.getElementById("no_flash_message").style.display = "none";
+      } else {
+        document.getElementById("prismata_iframe").style.display = "none";
+      }
+    </script>
   </body>
 </html>

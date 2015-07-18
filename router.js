@@ -114,6 +114,11 @@ function getRecentReplays(req, res, next) {
 
 function getUserId(email, delivery, callback, req) {
   db.User.getOrCreateWithEmail(email, function(error, user) {
+    if (error) {
+      req.session.errors.push(error.message);
+    } else {
+      req.session.errors.push("An email has been sent to " + email + ".");
+    }
     callback(error, user._id);
   });
 }
@@ -124,7 +129,6 @@ router.get("/", getPopularReplays, getRecentReplays, function(req, res) {
   res.render("index", res.locals);
 });
 
-/* No login version. Uncomment once login enabled.
 router.get("/login", function(req, res) {
   res.render("login");
 });
@@ -136,7 +140,6 @@ router.get("/logout", passwordless.logout(), function(req, res) {
 router.post("/sendtoken", passwordless.requestToken(getUserId), function(req, res) {
   res.redirect("/");
 });
-*/
 
 router.get("/search", populateSearch, function(req, res) {
   res.render("search", res.locals);
@@ -148,23 +151,18 @@ router.post("/search", function(req, res) {
 });
 
 router.get("/replay/:replayID", fetchReplay, getComments, function(req, res) {
-  if (res.locals.errors.length > 0) {
-    res.render("replay", res.locals);
-  } else {
-    res.redirect(303, "/");
-  }
+  res.render("replay", res.locals);
 });
 
-/* No Login version. Uncomment once login enabled.
 router.post("/replay/:replayID", function(req, res) {
   var comment = {
     user: res.locals.user,
     replayCode: req.params.replayID,
     message: req.body.comment,
-  };
+  }; 
   db.Comment.create(comment,  function(error) {
     if (error) {
-      req.session.error.push(error.message);
+      req.session.errors.push(error.message);
     }
     res.redirect(303, "/replay/" + req.params.replayID);
   });
@@ -183,7 +181,6 @@ router.post("/settings", function(req, res) {
     res.redirect(303, "/settings");
   });
 });
-*/
 
 router.get("/about", function(req, res) {
   res.render("about");

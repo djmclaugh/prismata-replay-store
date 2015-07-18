@@ -1,0 +1,29 @@
+<%
+dateToString = function(date) {
+  var dateString = "";
+  dateString += date.getFullYear();
+  dateString += "/" + (date.getMonth() + 1)
+  dateString += "/" + date.getDate();
+  dateString += " @ ";
+  var hours = date.getHours();
+  dateString += (hours < 10) ? "0" + hours : hours;
+  dateString += ":";
+  var minutes = date.getMinutes();
+  dateString += (minutes < 10) ? "0" + minutes : minutes;
+
+  return dateString;
+};
+
+replayTitle = function(replay) {
+  var gameTitle = "";
+  if (replay.result == 0) {
+    gameTitle += "*";
+  }
+  gameTitle += replay.players[0].name + " (" + replay.players[0].rating + ")" + " vs. "
+  if (replay.result == 1) {
+    gameTitle += "*";
+  }
+  gameTitle += replay.players[1].name + " (" + replay.players[1].rating + ")";
+  return gameTitle;
+};
+-%>

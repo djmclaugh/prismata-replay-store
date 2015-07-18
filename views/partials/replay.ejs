@@ -1,25 +1,15 @@
-<div class="replay"> <% var gameTitle = "";
-if (replay.result == 0) {
-  gameTitle += "*";
-}
-gameTitle += replay.players[0].name + " (" + replay.players[0].rating + ")" + " vs. " 
-if (replay.result == 1) {
-  gameTitle += "*";
-}
-gameTitle += replay.players[1].name + " (" + replay.players[1].rating + ")";
-var seconds = "" + Math.round(replay.duration) % 60;
-if (seconds.length == 1) {
-  seconds = "0" + seconds;
-}
-var durationString = Math.floor(replay.duration / 60) + ":" + seconds;  %> 
-      <h3><%= gameTitle %></h3>
-      <% for (var i = 0; i < replay.randomCards.length; ++i) { %><img width=50 height=50 src="/images/unit_portraits/<%= replay.randomCards[i].replace(/ /g,'') %>.png" alt="<%= replay.randomCards[i] %>" title="<%= replay.randomCards[i] %>">
-      <% } %>
-      <br>
-      Replay Code: <a target="_blank" href="http://play.prismata.net/?r=<%= replay.code %>"><%= replay.code %></a><br>
-      Rated Game: <%= replay.rated ? "YES" : "NO" %> <br>
-      Time Controls: <%= replay.timeControls %>s <br>
-      Number of Turns: <%= replay.length %> <br>
-      Duration: <%= durationString %> <br><br>
-      <em><%= replay.date %></em>
-    </div>
+<div class="replay">
+  <%- include ../utilities.ejs -%>
+  <% var seconds = "" + Math.round(replay.duration) % 60;
+     var durationString = Math.floor(replay.duration / 60) + "m. " + seconds + "s."; -%> 
+   <h3><%= replayTitle(replay) %></h3>
+      <% for (var i = 0; i < replay.randomCards.length; ++i) { -%>
+  <img width=50 height=50 src="/images/unit_portraits/<%= replay.randomCards[i].replace(/ /g,'') %>.png" alt="<%= replay.randomCards[i] %>" title="<%= replay.randomCards[i] %>">
+      <% } -%>
+  <br> <br>
+        Replay Code: <a href="replay/<%= replay.code %>"><%= replay.code %></a> <br>
+        <%= replay.rated ? "Arena Game" : "Casual Game" %> - <%= replay.timeControls %>s per turn <br>
+        <%= replay.length %> turns in <%= durationString %> <br>
+        <br>
+        <em><%= dateToString(replay.date) %></em>
+      </div>

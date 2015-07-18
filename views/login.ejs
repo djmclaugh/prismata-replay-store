@@ -2,12 +2,16 @@
 <html lang="en">
   <% var title = "Prismata Replays : Login" %><%- include partials/header.ejs %>
   <body>
+    <%- include partials/navigation_bar.ejs -%>
     <h1><%= title %></h1>
     <p>To login, simply enter your email address and you'll receive a link to your existing or newly created account.</p>
     <p>WARNING: This website is NOT using HTTPS. Anyone monitoring your internet connection can intercept your session cookie and access your account.</p>
     <form action="/sendtoken" method="POST">
-      Email: <input name="user" type="email">
-      <input type="submit" value="Login">
+      <p>
+        <label for="user">Email:</label>
+        <input id="user" name="user" type="email">
+        <input type="submit" value="Login">
+      </p>
     </form>
   </body>
 </html>
