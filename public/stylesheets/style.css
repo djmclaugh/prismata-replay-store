@@ -17,9 +17,14 @@ h1, h2 {
 }
 
 p {
-  padding-left:10%;
-  padding-right:10%;
+  padding-left: 10%;
+  padding-right: 10%;
   text-align: center;
+}
+
+.g-recaptcha {
+  margin: auto;
+  width: 304px;
 }
 
 .center_hack iframe {

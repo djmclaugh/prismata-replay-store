@@ -26,4 +26,21 @@ function hasFlash() {
   return false;
 }
 
+// To check if the user at least tried the capcha before submiting the form.
+var isCaptchaFilled = false;
 
+function onCaptchaFilled() {
+  isCaptchaFilled = true;
+}
+
+function onCaptchaExpired() {
+  isCaptchaFilled = false;
+}
+
+function checkIfCaptchaIsFilled() {
+  if (isCaptchaFilled) {
+    return true;
+  }
+  alert("Please answer the reCAPTCHA.");
+  return false;
+}

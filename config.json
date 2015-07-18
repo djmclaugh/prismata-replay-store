@@ -10,6 +10,7 @@
     "host": "host",
     "ssl": true
   },
-  "emailAddress": "The email address that will be used to send confirmation emails"
+  "emailAddress": "The email address that will be used to send confirmation emails",
+  "recaptchaURL": "https://www.google.com/recaptcha/api/siteverify?secret=PUT_RECAPTCHA_SECRET_KEY_HERE&response="
 }
 

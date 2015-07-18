@@ -4,14 +4,19 @@
   <body>
     <%- include partials/navigation_bar.ejs -%>
     <h1><%= title %></h1>
+    <%- include partials/errors.ejs -%>
     <p>To login, simply enter your email address and you'll receive a link to your existing or newly created account.</p>
     <p>WARNING: This website is NOT using HTTPS. Anyone monitoring your internet connection can intercept your session cookie and access your account.</p>
-    <form action="/sendtoken" method="POST">
+    <form action="/sendtoken" method="POST" onsubmit="return checkIfCaptchaIsFilled()";>
       <p>
         <label for="user">Email:</label>
         <input id="user" name="user" type="email">
-        <input type="submit" value="Login">
       </p>
+      <div class="g-recaptcha"
+          data-sitekey="6LeV_gkTAAAAAFe1Vhs2W4wInzoEQ3Bwhtur1OSD"
+          data-callback="onCaptchaFilled"
+          data-expired-callback="onCaptchaExpired"></div>
+      <p><input type="submit" value="Login"></p>
     </form>
   </body>
 </html>

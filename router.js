@@ -1,6 +1,7 @@
 var express = require("express");
 var db = require("./db");
 var passwordless = require("passwordless");
+var https = require('https');
 
 var router = express.Router();
 
@@ -14,6 +15,7 @@ function setUp(req, res, next) {
   res.locals.popularReplays = [];
   res.locals.errors = req.session.errors || [];
   req.session.errors = [];
+  req.session.recaptchaPass = false;
   var userID = req.user;
   db.User.findById(userID, function(error, user) {
     if (error) {
@@ -112,6 +114,34 @@ function getRecentReplays(req, res, next) {
     .exec(onFind);
 }
 
+function checkRecaptcha(req, res, next) {
+  var key = req.body["g-recaptcha-response"];
+  if (!key) {
+    req.session.errors.push("No ReCaptcha information received.");
+    next();
+    return;
+  }
+  https.get(require("./config").recaptchaURL + key, function(recaptchaRes) {
+    var data = "";
+    recaptchaRes.on("data", function(chunk) {
+      data += chunk.toString();
+    });
+    recaptchaRes.on("end", function() {
+      try {
+        var parsedData = JSON.parse(data);
+        req.recaptchaResult = parsedData;
+        if (!req.recaptchaResult.success) {
+          req.session.errors.push("ReCAPTCHA verification failed.");
+          console.log("Failed ReCAPTCHA: " + req.recaptchaResult);
+        }
+      } catch(error) {
+        req.session.errors.push(error.message);
+      }
+      next();
+    });
+  });
+}
+
 function getUserId(email, delivery, callback, req) {
   db.User.getOrCreateWithEmail(email, function(error, user) {
     if (error) {
@@ -121,6 +151,14 @@ function getUserId(email, delivery, callback, req) {
     }
     callback(error, user._id);
   });
+}
+
+function requestTokenIfRecaptcha(req, res, next) {
+  if (req.recaptchaResult.success) {
+    passwordless.requestToken(getUserId)(req, res, next);
+  } else {
+    next();
+  }
 }
 
 router.use(setUp);
@@ -137,8 +175,12 @@ router.get("/logout", passwordless.logout(), function(req, res) {
   res.redirect("/");
 });
 
-router.post("/sendtoken", passwordless.requestToken(getUserId), function(req, res) {
-  res.redirect("/");
+router.post("/sendtoken", checkRecaptcha, requestTokenIfRecaptcha, function(req, res) {
+  if (req.recaptchaResult && req.recaptchaResult.success) {
+    res.redirect("/");
+  } else {
+    res.redirect("/login");
+  }
 });
 
 router.get("/search", populateSearch, function(req, res) {
