@@ -22,7 +22,13 @@ function rawToReplay(rawString) {
   replay.length = json.commandInfo.moveDurations.length - 1;
   
   // We assume both players have the same time controls.
-  replay.timeControls = json.timeInfo.playerTime[0].increment;
+  // We use Number.MAX_VALUE for the case with no time controls.
+  // TODO: Find a more elegent solution.
+  if (json.timInfo.playerTime[0]) {
+    replay.timeControls = json.timeInfo.playerTime[0].increment;
+  } else {
+    replay.timeControls = Number.MAX_VALUE;
+  }
 
   // We assume both players have the same random cards.
   replay.randomCards = 
