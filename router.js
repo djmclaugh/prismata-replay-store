@@ -7,7 +7,7 @@ var router = express.Router();
 
 function setUp(req, res, next) {
   console.log("New Request: " + new Date().toISOString());
-  console.log(req);
+  console.log(req.headers);
 
   if (typeof(res.locals) == "undefined") {
     res.locals = {};
