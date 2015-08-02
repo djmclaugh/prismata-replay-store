@@ -6,6 +6,9 @@ var https = require('https');
 var router = express.Router();
 
 function setUp(req, res, next) {
+  console.log("New Request: " + new Date().toISOString());
+  console.log(req);
+
   if (typeof(res.locals) == "undefined") {
     res.locals = {};
   }
