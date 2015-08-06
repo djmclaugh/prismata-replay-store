@@ -24,7 +24,7 @@ function rawToReplay(rawString) {
   // We assume both players have the same time controls.
   // We use Number.MAX_VALUE for the case with no time controls.
   // TODO: Find a more elegent solution.
-  if (json.timInfo.playerTime[0]) {
+  if (json.timeInfo.playerTime[0]) {
     replay.timeControls = json.timeInfo.playerTime[0].increment;
   } else {
     replay.timeControls = Number.MAX_VALUE;
