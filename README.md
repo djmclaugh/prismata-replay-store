@@ -10,7 +10,7 @@ This app is meant to help players share and comment on interesting replays. This
 
 Here is what I do NOT want to accomplish:
 * This app is not meant to be a database of all prismata games. For a replay to be on the website, the replay code must be manualy entered. You should only add a replay if it's an interesting game (i.e.: close games, unexpected plays, tournament games, "autowin" rebutall, game between highly rated players).
-* This app is not meant to be an analytics tools. This app is not meant to figure out statistics like the percentage of p2 wins when Plasmafier is present. There is already a tool for that here: [a link](https://www.reddit.com/r/Prismata/comments/3fxkjp/i_made_the_prismata_statsforge_a_site_where_you/)
+* This app is not meant to be an analytics tools. This app is not meant to figure out statistics like the percentage of p2 wins when Plasmafier is present. There is already a tool for that [here](https://www.reddit.com/r/Prismata/comments/3fxkjp/i_made_the_prismata_statsforge_a_site_where_you/)
 
 ## How to install
 If you want to run your own private instance of the app, all you need is node.js and mongoDB.
