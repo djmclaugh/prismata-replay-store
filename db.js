@@ -62,9 +62,34 @@ exports.User = mongoose.model(userModelName, userSchema);
 var commentSchema = Schema({
   user: {type: Schema.Types.ObjectId, ref: userModelName},
   replayCode: String,
-  message: {type: String, minlength: 1},
-  date: {type: Date, default: Date.now}
+  message: String,
+  date: {type: Date, default: Date.now},
+  lastUpdated: Date
 });
+
+// Statics
+// callback - function(error)
+commentSchema.statics.updateComment = function(commentId, user, newComment, callback) {
+  onLookup = function(error, comment) {
+    if (error) {
+      callback(error);
+      return;
+    }
+    if (!comment) {
+      callback(new Error("Comment " + commentId + " not found."));
+      return;
+    }
+    if (comment.user.id != user.id) {
+      callback(new Error("Cannot edit comment from another user!"));
+      return;
+    }
+    comment.lastUpdated = Date.now();
+    comment.message = newComment;
+    comment.save(callback);
+  }
+
+  this.findById(commentId).populate("user").exec(onLookup);
+}
 
 exports.Comment = mongoose.model(commentModelName, commentSchema);
 

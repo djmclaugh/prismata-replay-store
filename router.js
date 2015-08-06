@@ -201,12 +201,26 @@ router.post("/replay/:replayID", function(req, res) {
     user: res.locals.user,
     replayCode: req.params.replayID,
     message: req.body.comment,
-  }; 
-  db.Comment.create(comment,  function(error) {
+  };
+  if (comment.message.length == 0) {
+    req.session.errors.push("Cannot submit empty comment");
+    res.redirect(303, "/replay/" + req.params.replayID);
+  } else {
+    db.Comment.create(comment,  function(error) {
+      if (error) {
+        req.session.errors.push(error.message);
+      }
+      res.redirect(303, "/replay/" + req.params.replayID);
+    });
+  }
+});
+
+router.post("/comment/:commentID", function(req, res) {
+  db.Comment.updateComment(req.params.commentID, res.locals.user, req.body.comment, function(error) {
     if (error) {
       req.session.errors.push(error.message);
     }
-    res.redirect(303, "/replay/" + req.params.replayID);
+    res.redirect(303, "back");
   });
 });
 

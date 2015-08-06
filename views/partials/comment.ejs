@@ -1,3 +1,9 @@
-<strong><%= comment.user.username %></strong>: <%= comment.message %> <br>
 <%- include ../utilities.ejs -%>
-    <i><%= dateToString(comment.date) %></i> <br>
+<strong><%= comment.user.username %></strong>:
+    <em><%= dateToString(comment.date) %><% if (comment.lastUpdated) { %><%= " - last edit " + dateToString(comment.lastUpdated) %><% } %></em><br>
+    <div id="comment_<%= comment.id %>">
+      <%= comment.message.length >= 1 ? comment.message : "Comment removed by user" %>
+    </div>
+<% if (user && user.id == comment.user.id) { -%>
+    <button id="edit_<%= comment.id %>" onclick="return editComment('<%= comment.id %>')">Edit</button><br>
+<% } -%>

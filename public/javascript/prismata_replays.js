@@ -9,6 +9,27 @@ function addReplay() {
   }
 }
 
+var comments = {};
+
+function editComment(commentId) {
+  var commentDiv = document.getElementById("comment_" + commentId);
+  var comment = commentDiv.innerHTML;
+  comments[commentId] = comment;
+  commentDiv.innerHTML = "<form action='/comment/" + commentId + "' method='POST'>" +
+      "<textarea name='comment' rows='3' cols='50'>" + comment + "</textarea><br>" +
+      "<button type='button' onclick='return cancelEditComment(\"" + commentId + "\")'>Cancel</button>" +
+      "<input type='submit' value='Submit'></form>";
+  document.getElementById("edit_" + commentId).style.display = "none";
+}
+
+function cancelEditComment(commentId) {
+  var commentDiv = document.getElementById("comment_" + commentId);
+  commentDiv.innerHTML = comments[commentId];
+  delete comments[commentId];
+  var linkElement = document.getElementById("edit_" + commentId);
+  document.getElementById("edit_" + commentId).style.display = "initial";
+}
+
 // Inspired by:
 // http://stackoverflow.com/questions/998245/how-can-i-detect-if-flash-is-installed-and-if-not-display-a-hidden-div-that-inf
 function hasFlash() {

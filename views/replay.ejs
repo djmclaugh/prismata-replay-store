@@ -10,7 +10,7 @@
     <h1><%= title  %></h1>
 <% if (replay) { -%>
     <h2><%= replayTitle(replay) %> <br> <%= dateToString(replay.date) %></h2>
-    <p id="no_flash_message"><em>You browser doesn't have flash enabled. You need flash to be able to watch the replay.</em></p>
+    <p id="no_flash_message"><em>Your browser doesn't have flash enabled. You need flash to be able to watch the replay.</em></p>
     <div class="center_hack">
       <iframe id="prismata_iframe" scrolling="no" src="http://play.prismata.net/?r=<%= replay.code %>" width="1050" height="675"></iframe>
     </div>
@@ -21,8 +21,8 @@
 <% } -%>
 <% if (user) { -%>
     <form action="" method="POST">
-      <textarea name="comment" placeholder="Comment"></textarea><br>
-      <input type="submit" value="Add comment">
+      <p><textarea name="comment" placeholder="Comment" rows="3" cols="50" required></textarea></p>
+      <p><input type="submit" value="Add comment"></p>
     </form>
 <% } -%>
 <% } -%>
