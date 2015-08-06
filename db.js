@@ -169,7 +169,7 @@ replaySchema.statics.search = function(search, callback) {
   var filter = {};
   
   if (search.player && typeof search.player == "string") {
-    filter["players.name"] = search.player;
+    filter["players.name"] = { $regex : new RegExp(search.player, "i") };
   }
 
   var min;
