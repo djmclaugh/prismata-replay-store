@@ -1,20 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" ng-app="prismata-replays">
   <% var title = "Prismata Replays" %><%- include partials/header.ejs %>
   <body>
     <%- include partials/navigation_bar.ejs %>
     <h1><%= title %></h1>
     <%- include partials/errors.ejs -%>
-    <p>Replay Code: <input id="replayCode" type="text" maxlength="11">
-    <button onclick="addReplay()">Add Replay</button>
-    <br><p class="error" id="replayCodeError"></p></p>
-    
-    <h2>Recent Additions:</h2>
-    <div class="replays_container">
-<% for (i = 0; i < recentReplays.length; ++i) { var replay = recentReplays[i]; -%>
-      <%- include partials/replay.ejs %>
-<%  } -%>
-    </div>
+
+    <add-replay-form></add-replay-form>
+
+    <recent-replays></recent-replays> 
+
   </body>
 </html>
 

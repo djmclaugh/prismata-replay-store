@@ -1,0 +1,8 @@
+<form class="add_replay_form" name="addReplayForm" ng-controller="AddReplayFormController as formCtrl" ng-submit="formCtrl.addReplay()">
+  <label for="replayCode">Replay Code:</label>
+  <input ng-class="{'valid':addReplayForm.replayCode.$valid && formCtrl.replayCode.length > 0}" id="replayCode" name="replayCode" type="text" size="11" maxlength="11" placeholder="XXXXX-XXXXX" ng-model="formCtrl.replayCode" replay-code-validator/>
+  <input type="submit" ng-disabled="!addReplayForm.replayCode.$valid || formCtrl.replayCode.length == 0" value="Add Replay"/>
+  <p class="error" ng-show="addReplayForm.replayCode.$error.invalidFormat && formCtrl.replayCode.length > 0">Invalid replay code format.</p>
+  <p ng-show="formCtrl.alreadyAddedCode">Replay <a href="/replay/{{formCtrl.alreadyAddedCode}}">{{formCtrl.alreadyAddedCode}}</a> has already been added.</p>
+  <p class="error" ng-show="formCtrl.error">{{formCtrl.error}}</p>
+</form>

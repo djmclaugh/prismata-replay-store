@@ -6,9 +6,6 @@ var https = require('https');
 var router = express.Router();
 
 function setUp(req, res, next) {
-  console.log("New Request: " + new Date().toISOString());
-  console.log(req.headers);
-
   if (typeof(res.locals) == "undefined") {
     res.locals = {};
   }
@@ -78,6 +75,7 @@ function fetchReplay(req, res, next) {
 function getComments(req, res, next) {
   db.Comment.find({replayCode: req.params.replayID})
     .populate("user")
+    .sort({date: 1})
     .exec(function(error, comments) {
       if (error) {
         res.locals.errors.push(error.message);
@@ -166,6 +164,10 @@ function requestTokenIfRecaptcha(req, res, next) {
 
 router.use(setUp);
 
+router.get("/services/recent_replays", getRecentReplays, function(req, res) {
+  res.send(res.locals.recentReplays);
+});
+
 router.get("/", getPopularReplays, getRecentReplays, function(req, res) {
   res.render("index", res.locals);
 });
@@ -195,8 +197,41 @@ router.post("/search", function(req, res) {
   res.redirect(303, "/search");
 });
 
+router.post("/services/search", function(req, res) {
+  console.log(req.body);
+  db.Replay.search(req.body, function(error, replays) {
+    if (error) {
+      res.send(error.message);
+    } else {
+      res.send(replays);
+    }
+  });
+});
+
 router.get("/replay/:replayID", fetchReplay, getComments, function(req, res) {
   res.render("replay", res.locals);
+});
+
+router.put("/services/replay/:replayCode", function(req, res) {
+  function onFetch(error, replay) {
+    if (error) {
+      res.send(error.message);
+    } else {
+      res.send("REPLAY_ADDED");
+    }
+  }
+
+  function onFind(error, replay) {
+    if (error) {
+      res.send(error.message);
+    } else if (replay) {
+      res.send("ALREADY_EXISTS");
+    } else {
+      db.Replay.getOrFetchReplay(req.params.replayCode, onFetch);
+    }
+  }
+
+  db.Replay.findOne({code: req.params.replayCode}, onFind);  
 });
 
 router.post("/replay/:replayID", function(req, res) {

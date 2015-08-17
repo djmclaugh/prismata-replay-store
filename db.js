@@ -124,7 +124,8 @@ var replaySchema = Schema({
 // callback - function(error, replay)
 replaySchema.statics.getOrFetchReplay = function(replayCode, callback) {
   self = this;
-  var onReplayFetch = function(error, replayData) {
+
+  function onFetch(error, replayData) {
     if (error) {
       callback(error, null);
     } else {
@@ -137,17 +138,17 @@ replaySchema.statics.getOrFetchReplay = function(replayCode, callback) {
         callback(err, replay);
       });
     }
-  };
+  }
 
-  var onFind = function (error, replay) {
+  function onFind(error, replay) {
     if (error || replay) {
       callback(error, replay);
     } else {
-      Prismata.fetchReplay(replayCode, onReplayFetch);
+      Prismata.fetchReplay(replayCode, onFetch);
     }
   };
   
-  this.findOne({code: replayCode}, onFind);
+  self.findOne({code: replayCode}, onFind);
 };
 
 // search - object {
@@ -225,7 +226,7 @@ replaySchema.statics.search = function(search, callback) {
   } else if (!search.include_rated && search.include_unrated) {
     filter["rated"] = false;
   } else if (!search.include_rated && !search.include_unrated) {
-    callback(null, []);
+    filter["$where"] = "false";
   }
 
   this.find(filter, null, {sort: {date: -1}}, function(error, replays) {

@@ -1,0 +1,40 @@
+<form class="search_form"  name="searchForm" ng-controller="SearchFormController as formCtrl" ng-submit="formCtrl.submit()">
+  <div class="field">
+    <label for="player">Contains player:</label>
+    <input id="player" ng-model="formCtrl.query.player" type="text">
+  </div>
+  <div class="field">
+    <label for="min_rating">Player Ratings:</label>
+    <input id="min_rating" ng-model="formCtrl.query.min_rating" type="number" min="0" max="9999" placeholder="min"> -
+    <input id="max_rating" ng-model="formCtrl.query.max_rating" type="number" min="0" max="9999" placeholder="max">
+  </div>
+  <div class="field">
+    <label for="min_time_controls">Time controls (in seconds):</label>
+    <input id="min_time_controls" ng-model="formCtrl.query.min_time_controls" type="number" min="0" max="999" placeholder="min"> -
+    <input id="max_time_controls" ng-model="formCtrl.query.max_time_controls" type="number" min="0" max="999" placeholder="max">
+  </div>
+  <div class="field">
+    <label for="min_length">Number of turns:</label>
+    <input id="min_length" ng-model="formCtrl.query.min_length" type="number" min="0" placeholder="min"> -
+    <input id="max_length" ng-model="formCtrl.query.max_length" type="number" min="0" placeholder="max">
+  </div>
+  <div class="field">
+    <label for="min_duration_minutes">Duration (in minutes):</label>
+    <input id="min_duration_minutes" ng-model="formCtrl.query.min_duration_minutes" type="number" min="0" placeholder="min" step="any"> -
+    <input id="max_duration_minutes" ng-model="formCtrl.query.max_duration_minutes" type="number" min="0" placeholder="max" step="any">
+  </div>
+  <div class="field">
+    <label for="units">Contains units:</label>
+    <input id="units" ng-model="formCtrl.query.units" type="text" size="28" placeholder="Ex: Husk, Wild Drone, !Pixie">
+  </div>
+  <div class="field">
+    <label>Include:</label>
+    <input type="checkbox" ng-model="formCtrl.query.include_rated" value="true">Arena Games
+    <input type="checkbox" ng-model="formCtrl.query.include_unrated" value="true">Unrated Games
+  </div>
+  <br>
+  <br>
+  <input type="submit" value="Search">
+  <p ng-show="searchForm.$submitted && formCtrl.error == null">{{formCtrl.numberOfReplaysMessage}}</p>
+  <p class="error" ng-show="formCtrl.error != null">{{formCtrl.error.message}} </p>  
+</form>

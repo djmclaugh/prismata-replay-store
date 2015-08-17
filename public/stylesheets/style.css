@@ -40,6 +40,10 @@ p {
   margin-left: -526px;
 }
 
+.add_replay_form {
+  text-align: center;
+}
+
 .search_form {
     margin-left:auto;
     margin-right:auto;
@@ -73,6 +77,10 @@ p {
   color: red;
 }
 
+.valid:focus {
+  outline-color: green;
+}
+
 .navigation {
   position: absolute;
   right: 30px;
@@ -83,14 +91,27 @@ p {
   text-align: center;
 }
 
+.replays_container div {
+  display: inline-block;
+}
+
 .replay {
   text-align: center;
   background-color: #F9F9F9;
   border: 1px solid #DDDDDD;
   border-radius: 6px 6px 6px 6px;
-  padding: 5px;
-  margin-top: 5px;
-  margin-bottom: 5px;
+  padding: 10px;
+  margin: 2px;
   display: inline-block;
+}
+
+.replay div {
+  text-align: center;
+  display: inline-block;
+}
+
+.replay img {
+  margin-left: 2px;
+  margin-right: 2px;
 }
 
