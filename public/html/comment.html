@@ -1,7 +1,0 @@
-<div class="comment" ng-controller="CommentController as commentCtrl">
-  <strong>{{ comment.user.username }}</strong>:
-  <em>{{ comment.date | date : "medium" }}</em>
-  <em ng-if="comment.lastUpdated != null"> - last edit  {{comment.lastUpdated | date : "medium" }}</em>
-  <br>
-  {{ comment.message.length >= 1 ? comment.message : "Comment removed by user" }}
-</div>
