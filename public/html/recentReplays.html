@@ -1,5 +1,5 @@
 <h2>Recent Additions:</h2>
-  <div class="replays_container" ng-controller="RecentReplaysController as recentReplays">
+<div class="replays_container" ng-controller="RecentReplaysController as recentReplays">
   <p class="error" ng-show="recentReplays.error != null">{{recentReplays.error.message}}</p>
   <div ng-repeat="replay in recentReplays.replays">
     <replay></replay>

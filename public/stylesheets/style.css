@@ -95,6 +95,11 @@ p {
   display: inline-block;
 }
 
+.comment {
+  margin-top: 15px;
+  margin-bottom: 15px;
+}
+
 .replay {
   text-align: center;
   background-color: #F9F9F9;

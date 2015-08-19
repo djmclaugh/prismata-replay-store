@@ -67,29 +67,10 @@ var commentSchema = Schema({
   lastUpdated: Date
 });
 
-// Statics
-// callback - function(error)
-commentSchema.statics.updateComment = function(commentId, user, newComment, callback) {
-  onLookup = function(error, comment) {
-    if (error) {
-      callback(error);
-      return;
-    }
-    if (!comment) {
-      callback(new Error("Comment " + commentId + " not found."));
-      return;
-    }
-    if (comment.user.id != user.id) {
-      callback(new Error("Cannot edit comment from another user!"));
-      return;
-    }
-    comment.lastUpdated = Date.now();
-    comment.message = newComment;
-    comment.save(callback);
-  }
-
-  this.findById(commentId).populate("user").exec(onLookup);
-}
+commentSchema.pre("save", function(next) {
+  this.lastUpdated = new Date();
+  next();
+});
 
 exports.Comment = mongoose.model(commentModelName, commentSchema);
 

@@ -1,0 +1,20 @@
+<div ng-if="replayCode != null" ng-controller="CommentsForReplayController as commentsCtrl" replay-code="{{ replayCode }}">
+  <p class="error" ng-show="commentsCtrl.error != null">{{ commentsCtrl.error.message }}</p>
+  <div class="comment" ng-controller="CommentController as commentCtrl" ng-repeat="comment in commentsCtrl.comments">
+    <strong>{{ comment.user.username }}</strong>:
+    <em>{{ comment.date | date : "medium" }}</em>
+    <em ng-if="comment.lastUpdated != null"> - last edit  {{comment.lastUpdated | date : "medium" }}</em>
+    <br>
+    <div ng-hide="commentCtrl.isEditing">
+      {{ comment.message.length >= 1 ? comment.message : "Comment removed by user" }}
+    </div>
+    <div ng-show="commentCtrl.canEdit()">
+      <textarea rows="3" cols="50" ng-model="commentCtrl.editMessage" ng-show="commentCtrl.isEditing"></textarea>
+      <br ng-show="commentCtrl.isEditing">
+      <button ng-hide="commentCtrl.isEditing" ng-click="commentCtrl.startEdit()">edit</button>
+      <button ng-show="commentCtrl.isEditing" ng-click="commentCtrl.cancelEdit()">cancel</button>
+      <button ng-show="commentCtrl.isEditing" ng-click="commentCtrl.submitEdit()">submit</button>
+    </div>
+    <div class="error" ng-show="commentCtrl.error != null">{{ commentCtrl.error.message }}</div>
+  </div>
+</div>

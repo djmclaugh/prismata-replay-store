@@ -127,7 +127,7 @@ exports.fetchReplay = function(replayID, callback) {
         callback(null, rawToReplay(raw));
       });
     } else {
-      var error = new Error("Replay \"" + replayID + "\" not found.");
+      var error = new Error("Cannot get replay \"" + replayID + "\" from Prismata's API.");
       callback(error, null);
     }
   }).on('error', function(error) {

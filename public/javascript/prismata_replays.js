@@ -1,11 +1,70 @@
 var app = angular.module("prismata-replays", []);
 
+app.config(function($sceDelegateProvider) {
+  $sceDelegateProvider.resourceUrlWhitelist([
+    "self",
+    "http://play.prismata.net/**"
+  ]); 
+});
+
+app.service("UserService", function($http) {
+  var self = this;
+  
+  self.user = null;
+  self.error = null;
+
+  function onSuccess(response) {
+    self.user = response.data;
+  }
+  function onError(response) {
+    self.error = new Error(response.data);
+  }
+  $http.get("/services/currentUser").then(onSuccess, onError);
+});
+
+app.service("CommentService", function(ReplayService, $http) {
+  var self = this;
+
+  self.fetchCommentsForReplay = function(replayCode, callback) {
+    if (replayCode == null) {
+      callback(new Error("No replay code received to fetch comments."), []);
+      return;
+    }
+    if (!ReplayService.isValidReplayCode(replayCode)) {
+      callback(new Error("\"" + replayCode + "\" is not a valid replay code."), []);
+      return;
+    }
+    function onSuccess(response) {
+      callback(null, response.data);
+    }
+    function onError(response) {
+      callback(new Error(response.data), null)
+    }
+    $http.get("/services/commentsForReplay/" + replayCode).then(onSuccess, onError);
+  };
+
+  self.updateComment = function(comment, callback) {
+    function onSuccess(response) {
+      callback(null, response.data);
+    }
+    function onError(response) {
+      callback(new Error(response.data), null);
+    }
+    $http.put("/services/comment/" + comment._id, {comment: comment.message}).then(onSuccess, onError);
+  };
+});
+
 app.service("ReplayService", function($http) {
   var self = this;
   
   self.recentReplays = [];
   self.searchResults = [];
-  
+
+  var replayRegex = new RegExp("^[A-z0-9@+]{5}-[$A-z0-9@+]{5}$");
+  self.isValidReplayCode = function(code) {
+    return replayRegex.test(code);
+  }
+
   self.fetchRecentReplays = function(callback) {
     function onSuccess(response) {
       self.recentReplays.splice.apply(self.recentReplays, [0, self.recentReplays.length].concat(response.data));
@@ -13,7 +72,7 @@ app.service("ReplayService", function($http) {
         callback(null);
       }
     }
-    function onError(responce) {
+    function onError(response) {
       if (callback) {
         callback(new Error("Failled to fetch Recent Replays."));
       }
@@ -38,41 +97,56 @@ app.service("ReplayService", function($http) {
   
   self.addReplay = function(replayCode, callback) {
     function onSuccess(response) {
-      callback(null, response.data);
+      callback("SUCCESSFULLY_ADDED");
       self.fetchRecentReplays();
     }
     function onError(response) {
-      callback(new Error("Failled to add replay."), null);
+      if (response.status == 400) {
+        callback("ALREADY_EXISTS");
+      } else {
+        callback(reponse.data);
+      }
     }
-    $http.put("/services/replay/" + replayCode).then(onSuccess, onError);
+    $http.post("/services/replay/addReplay", {replayCode: replayCode}).then(onSuccess, onError);
+  };
+
+  self.fetchReplay = function(replayCode, callback) {
+    if (!self.isValidReplayCode(replayCode)) {
+      callback(new Error("\"" + replayCode + "\" is not a valid replay code."), null);
+      return;
+    }
+    function onSuccess(response) {
+      callback(null, response.data);
+    }
+    function onError(response) {
+      callback(new Error(response.data), null);
+    }
+    $http.get("/services/replay/" + replayCode).then(onSuccess, onError);
   };
 });
 
-app.controller("AddReplayFormController", function($scope, ReplayService) {
+app.controller("AddReplayFormController", function(ReplayService) {
   var self = this;
   self.replayCode = "";
   self.alreadyAddedCode = "";
   self.error = "";
   self.addReplay = function() {
-    ReplayService.addReplay(self.replayCode, function(error, data) {
-      if (error) {
-        self.error = error.message;
-        self.replayCode = self.alreadyAddedCode = "";
-      } else if (data == "REPLAY_ADDED") {
+    ReplayService.addReplay(self.replayCode, function(result) {
+      if (result == "SUCESSFULLY_ADDED") {
         self.replayCode = self.alreadyAddedCode = self.error = "";
-      } else if (data == "ALREADY_EXISTS") {
+      } else if (result == "ALREADY_EXISTS") {
         self.error = "";
         self.alreadyAddedCode = self.replayCode;
         self.replayCode = "";
       } else {
         self.replayCode = self.alreadyAddedCode = "";
-        self.error = data;
+        self.error = result;
       }
     });
   };
 });
 
-app.controller("SearchFormController", function(ReplayService, $log) {
+app.controller("SearchFormController", function(ReplayService) {
   var self = this;  
 
   self.error = null;
@@ -81,7 +155,6 @@ app.controller("SearchFormController", function(ReplayService, $log) {
   self.query.include_unrated = true;
   
   self.submit = function () {
-    $log.log(self.query);
     updateNumberOfReplaysMessage(true);
     ReplayService.fetchSearchResults(self.query, function(error) {
       self.error = error;
@@ -119,10 +192,80 @@ app.controller("SearchReplaysController", function(ReplayService) {
   self.replays = ReplayService.searchResults;
 });
 
+app.controller("ReplayViewController", function(ReplayService, $attrs) {
+  var self = this;
+  self.error = null;
+  self.replay = null;
+  if ($attrs.replayCode == null) {
+    self.error = new Error("No replay code received!");
+  } else {
+    ReplayService.fetchReplay($attrs.replayCode, function(error, replay) {
+      self.replay = replay;
+      self.error = error;
+    });
+  } 
+});
+
+app.controller("CommentsForReplayController", function(CommentService, $attrs) {
+  var self = this;
+  self.error = null;
+  self.comments = [];
+
+  $attrs.$observe("replayCode", function(replayCode) {
+    CommentService.fetchCommentsForReplay($attrs.replayCode, function(error, comments) {
+      self.comments = comments;
+      self.error = error;
+    });
+  });
+  
+  CommentService.fetchCommentsForReplay($attrs.replayCode, function(error, comments) {
+    self.comments = comments;
+    self.error = error;
+  }); 
+});
+
+app.controller("CommentController", function(CommentService, UserService, $scope) {
+  var self = this;
+  self.isEditing = false;
+  self.editMessage = "";
+  self.error = null;
+  self.startEdit = function() {
+    self.isEditing = true;
+    self.editMessage = $scope.comment.message;
+  };
+  self.cancelEdit = function() {
+    self.isEditing = false;
+  };
+  self.submitEdit = function() {
+    self.isEditing = false;
+    var previousMessage = $scope.comment.message;
+    $scope.comment.message = self.editMessage;
+    CommentService.updateComment($scope.comment, function(error, comment) {
+      self.error = error;
+      if (comment != null) {
+        console.log(comment);
+        $scope.comment = comment;
+      } else {
+        $scope.comment.message = previousMessage;
+      }
+    });
+  };
+  self.canEdit = function() {
+    return UserService.user != null && UserService.user._id == $scope.comment.user._id;
+  };
+});
+
 app.directive("replay", function() {
   return {
     restrict: "E",
     templateUrl: "/html/replay.html"
+  };
+});
+
+app.directive("comment", function() {
+  return {
+    restrict: "E",
+    templateUrl: "/html/comment.html"
   };
 });
 
@@ -154,16 +297,49 @@ app.directive("addReplayForm", function() {
   };
 });
 
-app.directive("replayCodeValidator", function() {
+app.directive("replayCodeValidator", function(ReplayService) {
   return {
     restrict: "A",
     require: "ngModel",
     link: function(scope, ele, attrs, ctrl) {
       ctrl.$parsers.unshift(function(value) {
-        var replayRegex = new RegExp("^[A-z0-9@+]{5}-[$A-z0-9@+]{5}$");
-        ctrl.$setValidity("invalidFormat", replayRegex.test(value));
+        ctrl.$setValidity("invalidFormat", ReplayService.isValidReplayCode(value));
         return value;
       });
+    }
+  };
+});
+
+app.directive("commentsSection", function() {
+  return {
+    restrict: "E",
+    templateUrl: "/html/commentsSection.html",
+    scope: {replayCode: "@replayCode"} 
+  };
+});
+
+app.directive("replayIframe", function($log) {
+  return {
+    restrict: "E",
+    templateUrl: "/html/replayIframe.html",
+    scope: {replayCode: "@replayCode"},
+    link: function(scope, element, attrs) {
+      // Inspired by:
+      // http://stackoverflow.com/questions/998245/how-can-i-detect-if-flash-is-installed-and-if-not-display-a-hidden-div-that-inf
+      scope.hasFlash = function() {
+        try {
+          if (Boolean(new ActiveXObject('ShockwaveFlash.ShockwaveFlash'))) {
+            return true;
+          }
+        } catch (e) {
+          var types = navigator.mimeTypes;
+          if (types && types['application/x-shockwave-flash'] != undefined
+              && types['application/x-shockwave-flash'].enabledPlugin) {
+            return true;
+          }
+        }
+        return false;
+      }
     }
   };
 });
@@ -195,54 +371,11 @@ app.filter("replayTitle", function() {
   };
 });
 
-const replayRegex = new RegExp("^[A-z0-9@+]{5}-[$A-z0-9@+]{5}");
-
-function addReplay() {
-  var replayCode = document.getElementById("replayCode").value;
-  if (replayRegex.test(replayCode)) {
-    window.location.href = "/replay/" + replayCode;
-  } else {
-    document.getElementById('replayCodeError').innerHTML = "Invalid Replay Code Format";
-  }
-}
-
-var comments = {};
-
-function editComment(commentId) {
-  var commentDiv = document.getElementById("comment_" + commentId);
-  var comment = commentDiv.innerHTML.trim();
-  comments[commentId] = comment;
-  commentDiv.innerHTML = "<form action='/comment/" + commentId + "' method='POST'>" +
-      "<textarea name='comment' rows='3' cols='50'>" + comment + "</textarea><br>" +
-      "<button type='button' onclick='return cancelEditComment(\"" + commentId + "\")'>Cancel</button>" +
-      "<input type='submit' value='Submit'></form>";
-  document.getElementById("edit_" + commentId).style.display = "none";
-}
-
-function cancelEditComment(commentId) {
-  var commentDiv = document.getElementById("comment_" + commentId);
-  commentDiv.innerHTML = comments[commentId];
-  delete comments[commentId];
-  var linkElement = document.getElementById("edit_" + commentId);
-  document.getElementById("edit_" + commentId).style.display = "initial";
-}
-
-// Inspired by:
-// http://stackoverflow.com/questions/998245/how-can-i-detect-if-flash-is-installed-and-if-not-display-a-hidden-div-that-inf
-function hasFlash() {
-  try {
-    if (Boolean(new ActiveXObject('ShockwaveFlash.ShockwaveFlash'))) {
-      return true;
-    }
-  } catch (e) {
-    if (navigator.mimeTypes
-        && navigator.mimeTypes['application/x-shockwave-flash'] != undefined
-        && navigator.mimeTypes['application/x-shockwave-flash'].enabledPlugin) {
-      return true;
-    }
-  }
-  return false;
-}
+app.filter("replayCodeToPrismataUrl", function() {
+  return function(replayCode) {
+    return "http://play.prismata.net/?r=" + replayCode;
+  };
+});
 
 // To check if the user at least tried the capcha before submiting the form.
 var isCaptchaFilled = false;

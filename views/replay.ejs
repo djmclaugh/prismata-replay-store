@@ -1,38 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" ng-app="prismata-replays">
   <%- include utilities.ejs -%>
-  <% var title = "Prismata Replays : "; if (replay) { title += replay.code; } else { title += "Error"; } -%>
+  <% var title = "Prismata Replays : "; if (replayCode) { title += replayCode; } else { title += "Error"; } -%>
   
   <%- include partials/header.ejs -%>
   
-  <body>
+  <body ng-controller="ReplayViewController as replayCtrl" replay-code="<%= replayCode %>">
     <%- include partials/navigation_bar.ejs %>
     <h1><%= title  %></h1>
-<% if (replay) { -%>
-    <h2><%= replayTitle(replay) %> <br> <%= dateToString(replay.date) %></h2>
-    <p id="no_flash_message"><em>Your browser doesn't have flash enabled. You need flash to be able to watch the replay.</em></p>
-    <div class="center_hack">
-      <iframe id="prismata_iframe" scrolling="no" src="http://play.prismata.net/?r=<%= replay.code %>" width="1050" height="675"></iframe>
-    </div>
-    <br>
-<% for (var i = 0; i < comments.length; ++i) { var comment = comments[i]; -%>
-    <%- include partials/comment.ejs -%>
-    <br>
-<% } -%>
-<% if (user) { -%>
-    <form action="" method="POST">
-      <p><textarea name="comment" placeholder="Comment" rows="3" cols="50" required></textarea></p>
-      <p><input type="submit" value="Add comment"></p>
-    </form>
-<% } -%>
-<% } -%>
-    <%- include partials/errors.ejs -%>
-    <script type="text/javascript">
-      if (hasFlash()) {
-        document.getElementById("no_flash_message").style.display = "none";
-      } else {
-        document.getElementById("prismata_iframe").style.display = "none";
-      }
-    </script>
+    <h2 ng-if="replayCtrl.replay != null">{{replayCtrl.replay | replayTitle}} <br> {{replayCtrl.replay.date | date : "medium"}}</h2>
+    <h2 class="error" ng-if="replayCtrl.error != null">{{replayCtrl.error.message}}</h2>
+    <replay-iframe replay-code="<%= replayCode %>"></replay-iframe>
+    <comments-section replay-code="<%= replayCode %>"></comments-section>
   </body>
 </html>

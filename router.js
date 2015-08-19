@@ -9,15 +9,10 @@ function setUp(req, res, next) {
   if (typeof(res.locals) == "undefined") {
     res.locals = {};
   }
-  res.locals.replay = null;
-  res.locals.replays = [];
-  res.locals.recentReplays = [];
-  res.locals.popularReplays = [];
   res.locals.errors = req.session.errors || [];
   req.session.errors = [];
   req.session.recaptchaPass = false;
-  var userID = req.user;
-  db.User.findById(userID, function(error, user) {
+  db.User.findById(req.user, function(error, user) {
     if (error) {
       req.locals.errors.push(error.message);
     }
@@ -26,97 +21,9 @@ function setUp(req, res, next) {
   });
 }
 
-function populateSearch(req, res, next) {
-  var search = req.session.search;
-  res.locals.search = search;
-  req.session.search = null;
-  
-  if (!search) {
-    res.locals.search = {};
-    res.locals.search.include_rated = true;
-    res.locals.search.include_unrated = true;
-    next();
-    return;
-  }
-  
-  db.Replay.search(search, function(error, replays) {
-    if (error) {
-      res.locals.errors.push(error.message);
-      console.log(error);
-    }
-    if (replays.length == 0) {
-      res.locals.errors.push("No results found.");
-    } 
-    res.locals.replays = replays;
-    next();
-  });
-}
-
-function fetchReplay(req, res, next) {
-  db.Replay.getOrFetchReplay(req.params.replayID, function(error, replay) {
-    if (replay) {
-      res.locals.replay = replay;
-      replay.popularity += replay.popularity + 1;
-      replay.save(function(err) {
-        if (err) {
-          res.locals.errors.push(err.message);
-        }
-        next();
-      });
-    } else {
-      if (error) {
-        res.locals.errors.push(error.message);
-      }
-      next();
-    }
-  });
-}
-
-function getComments(req, res, next) {
-  db.Comment.find({replayCode: req.params.replayID})
-    .populate("user")
-    .sort({date: 1})
-    .exec(function(error, comments) {
-      if (error) {
-        res.locals.errors.push(error.message);
-      }
-      res.locals.comments = comments;
-      next();
-    });
-}
-
-function getPopularReplays(req, res, next) {
-  var onFind = function(error, replays) {
-    if (error) {
-      res.locals.errors.push(error.message);
-    }
-    res.locals.popularReplays = replays;
-    next();
-  };
-
-  db.Replay.find({})
-    .sort({popularity: -1})
-    .limit(5)
-    .exec(onFind); 
-}
-
-function getRecentReplays(req, res, next) {
-  var onFind = function(error, replays) {
-    if (error) {
-      res.locals.errors.push(error.message);
-    }
-    res.locals.recentReplays = replays;
-    next();
-  };
-
-  db.Replay.find({})
-    .sort({dateAdded: -1})
-    .limit(5)
-    .exec(onFind);
-}
-
 function checkRecaptcha(req, res, next) {
   var key = req.body["g-recaptcha-response"];
+  req.recaptchaResult = {success: false};
   if (!key) {
     req.session.errors.push("No ReCaptcha information received.");
     next();
@@ -164,11 +71,26 @@ function requestTokenIfRecaptcha(req, res, next) {
 
 router.use(setUp);
 
-router.get("/services/recent_replays", getRecentReplays, function(req, res) {
-  res.send(res.locals.recentReplays);
+router.get("/services/currentUser", function(req, res) {
+  res.send(res.locals.user);
 });
 
-router.get("/", getPopularReplays, getRecentReplays, function(req, res) {
+router.get("/services/recent_replays", function(req, res) {
+  function onFind(error, replays) {
+    if (error) {
+      res.status(500).send(error.message);
+    } else {
+      res.send(replays);
+    }
+  }
+
+  db.Replay.find({})
+    .sort({dateAdded: -1})
+    .limit(5)
+    .exec(onFind);
+});
+
+router.get("/", function(req, res) {
   res.render("index", res.locals);
 });
 
@@ -188,13 +110,8 @@ router.post("/sendtoken", checkRecaptcha, requestTokenIfRecaptcha, function(req,
   }
 });
 
-router.get("/search", populateSearch, function(req, res) {
+router.get("/search", function(req, res) {
   res.render("search", res.locals);
-});
-
-router.post("/search", function(req, res) {
-  req.session.search = req.body;
-  res.redirect(303, "/search");
 });
 
 router.post("/services/search", function(req, res) {
@@ -208,60 +125,115 @@ router.post("/services/search", function(req, res) {
   });
 });
 
-router.get("/replay/:replayID", fetchReplay, getComments, function(req, res) {
+router.get("/replay/:replayID", function(req, res) {
+  res.locals.replayCode = req.params.replayID;
   res.render("replay", res.locals);
 });
 
-router.put("/services/replay/:replayCode", function(req, res) {
+router.get("/services/replay/:replayCode", function(req, res) {
   function onFetch(error, replay) {
     if (error) {
-      res.send(error.message);
+      res.status(500).send(error.message);
     } else {
-      res.send("REPLAY_ADDED");
+      res.send(replay);
+    }
+  }
+  db.Replay.getOrFetchReplay(req.params.replayCode, onFetch);
+});
+
+router.post("/services/replay/addReplay", function(req, res) {
+  function onFetch(error, replay) {
+    if (error) {
+      res.status(500).send(error.message);
+    } else {
+      res.send(replay);
     }
   }
 
   function onFind(error, replay) {
     if (error) {
-      res.send(error.message);
+      res.status(500).send(error.message);
     } else if (replay) {
-      res.send("ALREADY_EXISTS");
+      res.status(400).send("Replay \"" + req.body.replayCode + "\" has already been added");
     } else {
-      db.Replay.getOrFetchReplay(req.params.replayCode, onFetch);
+      db.Replay.getOrFetchReplay(req.body.replayCode, onFetch);
     }
   }
 
-  db.Replay.findOne({code: req.params.replayCode}, onFind);  
+  db.Replay.findOne({code: req.body.replayCode}, onFind);  
 });
 
-router.post("/replay/:replayID", function(req, res) {
+router.post("/services/comment", function(req, res) {
+  if (res.locals.user == null) {
+    res.status(403).send("You must be logged in to submit a comment.");
+    return;
+  }
+  if (req.body.replayCode == null) {
+    res.status(400).send("You must specify which replay your comment is targeting.");
+    return;
+  }
+  if (req.body.comment.length == 0) {
+    res.status(400).send("Cannot submit an empty comment.");
+    return;
+  }
+
   var comment = {
     user: res.locals.user,
-    replayCode: req.params.replayID,
-    message: req.body.comment,
+    replayCode: req.body.replayCode,
+    message: req.body.comment
   };
-  if (comment.message.length == 0) {
-    req.session.errors.push("Cannot submit empty comment");
-    res.redirect(303, "/replay/" + req.params.replayID);
-  } else {
-    db.Comment.create(comment,  function(error) {
-      if (error) {
-        req.session.errors.push(error.message);
-      }
-      res.redirect(303, "/replay/" + req.params.replayID);
-    });
-  }
-});
 
-router.post("/comment/:commentID", function(req, res) {
-  db.Comment.updateComment(req.params.commentID, res.locals.user, req.body.comment, function(error) {
+  db.Comment.create(comment, function(error, comment) {
     if (error) {
-      req.session.errors.push(error.message);
+      res.status(500).send(error.message);
+    } else {
+      res.send(comment);
     }
-    res.redirect(303, "back");
   });
 });
 
+router.put("/services/comment/:commentID", function(req, res) {
+  function onSave(error, comment) {
+    if (error) {
+      res.status(500).send(error.message);
+      return;
+    }
+    res.send(comment);
+  }
+
+  function onLookup(error, comment) {
+    if (error) {
+      res.status(500).send(error.message);
+      return;
+    }
+    if (!comment) {
+      res.status(404).send("Comment " + commentId + "not found.");
+      return;
+    }
+    if (res.locals.user == null || comment.user.id != res.locals.user.id) {
+      res.status(403).send("Cannot update a comment from another user!");
+      return;
+    }
+    comment.message = req.body.comment;
+    comment.save(onSave);
+  }
+
+  db.Comment.findById(req.params.commentID).populate("user").exec(onLookup);
+});
+
+router.get("/services/commentsForReplay/:replayCode", function(req, res) {
+  db.Comment.find({replayCode: req.params.replayCode})
+    .populate("user", "username")
+    .select("-replayCode -__v")
+    .sort({date: 1})
+    .exec(function(error, comments) {
+      if (error) {
+        res.status(500).send(error.message);
+      } else {
+        res.send(comments);
+      }
+    });
+});
 
 router.get("/settings", function(req, res) {
   res.render("user_settings");

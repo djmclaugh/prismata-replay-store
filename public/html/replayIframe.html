@@ -1,0 +1,4 @@
+<p ng-hide="hasFlash()"><em>Your browser doesn't have flash enabled. You need flash to be able to watch the replay.</em></p>
+<div class="center_hack" ng-show="hasFlash()">
+  <iframe scrolling="no" src="{{ replayCode | replayCodeToPrismataUrl }}" width="1050" height="675"></iframe>
+</div>
