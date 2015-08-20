@@ -49,7 +49,7 @@ app.use(session({
 app.use(passwordless.sessionSupport());
 app.use(passwordless.acceptToken({ successRedirect: "/"}));
 
-app.use(require("./router"));
+app.use(require("./routes/router"));
 
 db.Replay.syncAllOutdatedReplays(function(error) {
   if (error) {

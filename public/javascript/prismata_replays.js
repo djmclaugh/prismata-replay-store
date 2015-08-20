@@ -30,7 +30,7 @@ app.service("UserService", function($http) {
     function onError(response) {
       callback(new Error(response.data));
     }
-    $http.post("/services/changeUsername", {newUsername: newUsername}).then(onSuccess, onError);
+    $http.post("/api/user/changeUsername", {newUsername: newUsername}).then(onSuccess, onError);
   };
 
   function onSuccess(response) {
@@ -39,7 +39,7 @@ app.service("UserService", function($http) {
   function onError(response) {
     self.error = new Error(response.data);
   }
-  $http.get("/services/currentUser").then(onSuccess, onError);
+  $http.get("/api/user/currentUser").then(onSuccess, onError);
 });
 
 app.service("CommentService", function(ReplayService, $http) {
@@ -60,7 +60,7 @@ app.service("CommentService", function(ReplayService, $http) {
     function onError(response) {
       callback(new Error(response.data), null)
     }
-    $http.get("/services/commentsForReplay/" + replayCode).then(onSuccess, onError);
+    $http.get("/api/comment/commentsForReplay/" + replayCode).then(onSuccess, onError);
   };
 
   self.postComment = function(replayCode, message, callback) {
@@ -70,7 +70,7 @@ app.service("CommentService", function(ReplayService, $http) {
     function onError(response) {
       callback(new Error(response.data), null);
     }
-    $http.post("/services/comment", {replayCode: replayCode, comment: message}).then(onSuccess, onError);
+    $http.post("/api/comment", {replayCode: replayCode, comment: message}).then(onSuccess, onError);
   };
 
   self.updateComment = function(comment, callback) {
@@ -80,7 +80,7 @@ app.service("CommentService", function(ReplayService, $http) {
     function onError(response) {
       callback(new Error(response.data), null);
     }
-    $http.put("/services/comment/" + comment._id, {comment: comment.message}).then(onSuccess, onError);
+    $http.put("/api/comment/" + comment._id, {comment: comment.message}).then(onSuccess, onError);
   };
 });
 
@@ -107,7 +107,7 @@ app.service("ReplayService", function($http) {
         callback(new Error("Failled to fetch Recent Replays."));
       }
     }
-    $http.get("/services/recent_replays").then(onSuccess, onError);
+    $http.get("/api/replay/recentReplays").then(onSuccess, onError);
   };
   
   self.fetchSearchResults = function(query, callback) {
@@ -122,7 +122,7 @@ app.service("ReplayService", function($http) {
         callback(new Error("Failled to fetch Search Results."));
       }
     }
-    $http.post("/services/search", query).then(onSuccess, onError);
+    $http.post("/api/replay/search", query).then(onSuccess, onError);
   };
   
   self.addReplay = function(replayCode, callback) {
@@ -137,7 +137,7 @@ app.service("ReplayService", function($http) {
         callback(response.data);
       }
     }
-    $http.post("/services/replay/addReplay", {replayCode: replayCode}).then(onSuccess, onError);
+    $http.post("/api/replay/addReplay", {replayCode: replayCode}).then(onSuccess, onError);
   };
 
   self.fetchReplay = function(replayCode, callback) {
@@ -151,7 +151,7 @@ app.service("ReplayService", function($http) {
     function onError(response) {
       callback(new Error(response.data), null);
     }
-    $http.get("/services/replay/" + replayCode).then(onSuccess, onError);
+    $http.get("/api/replay/" + replayCode).then(onSuccess, onError);
   };
 });
 
@@ -338,7 +338,7 @@ app.controller("LoginFormController", function($http) {
     function onError(response) {
       self.error = new Error(response.data);
     }
-    $http.post("/services/sendToken", body).then(onSuccess, onError); 
+    $http.post("/api/user/sendToken", body).then(onSuccess, onError); 
   };
 });
 

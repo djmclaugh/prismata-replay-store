@@ -2,6 +2,7 @@ var http = require('http');
 var zlib = require("zlib");
 
 const replay_url = require("./config.json").prismataReplaysLocation;
+const replayCodeRegex = new RegExp("^[A-z0-9@+]{5}-[$A-z0-9@+]{5}$");
 
 // Takes in the raw JSON string we get from the server and create a more useful object.
 function rawToReplay(rawString) {
@@ -113,13 +114,18 @@ function unzip(response, callback) {
   });
 }
 
+exports.replayCodeRegex = replayCodeRegex;
+
 // Fetches the replay from the prismata service and updates the database.
 // callback - function(error, replay) 
-exports.fetchReplay = function(replayID, callback) {
+exports.fetchReplay = function(replayCode, callback) {
+  if (!replayCodeRegex.test(replayCode)) {
+    callback(new Error("\"" + replayCode + "\" doesn't follow the replay code format."), null);
+  }
   var options = {
     host: replay_url,
     port: 80,
-    path: '/' + replayID + ".json.gz"
+    path: '/' + replayCode + ".json.gz"
   };
   http.get(options, function(res) {
     if (res.statusCode == 200) {
@@ -127,11 +133,11 @@ exports.fetchReplay = function(replayID, callback) {
         callback(null, rawToReplay(raw));
       });
     } else {
-      var error = new Error("Cannot get replay \"" + replayID + "\" from Prismata's API.");
+      var error = new Error("Cannot get replay \"" + replayCode + "\" from Prismata's API.");
       callback(error, null);
     }
   }).on('error', function(error) {
     callback(error, null);
   });
-}
+};
 
