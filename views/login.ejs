@@ -1,22 +1,21 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" ng-app="prismata-replays">
   <% var title = "Prismata Replays : Login" %><%- include partials/header.ejs %>
   <body>
-    <%- include partials/navigation_bar.ejs -%>
+    <navigation-bar></navigation-bar>
     <h1><%= title %></h1>
-    <%- include partials/errors.ejs -%>
     <p>To login, simply enter your email address and you'll receive a link to your existing or newly created account.</p>
-    <p>WARNING: This website is NOT using HTTPS. Anyone monitoring your internet connection can intercept your session cookie and access your account.</p>
-    <form action="/sendtoken" method="POST" onsubmit="return checkIfCaptchaIsFilled()";>
-      <p>
-        <label for="user">Email:</label>
-        <input id="user" name="user" type="email">
-      </p>
-      <div class="g-recaptcha"
-          data-sitekey="6LeV_gkTAAAAAFe1Vhs2W4wInzoEQ3Bwhtur1OSD"
-          data-callback="onCaptchaFilled"
-          data-expired-callback="onCaptchaExpired"></div>
-      <p><input type="submit" value="Login"></p>
+    <form name="loginForm" ng-controller="LoginFormController as formCtrl" ng-submit="formCtrl.submit()">
+      <div ng-hide="formCtrl.emailSent">
+        <p>
+          <label for="email">Emaill:</label>
+          <input id="email" ng-model="formCtrl.email" type="email">
+        </p>
+        <div class="g-recaptcha"data-sitekey="6LeV_gkTAAAAAFe1Vhs2W4wInzoEQ3Bwhtur1OSD"></div>
+        <p class="error" ng-show="formCtrl.error != null">{{ formCtrl.error.message }}</p>
+        <p><input type="submit" value="Login"></p>
+      </div>
+      <p ng-show="formCtrl.emailSent"><strong>{{ formCtrl.successMessage }}</strong></p>
     </form>
   </body>
 </html>

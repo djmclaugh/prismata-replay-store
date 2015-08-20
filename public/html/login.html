@@ -1,0 +1,10 @@
+<form name="loginForm" ng-controller="LoginFormController as formCtrl" ng-submit="formCtrl.submit()">
+  <p>
+    <label for="email">Emaill:</label>
+    <input id="email" ng-model="formCtrl.email" type="email">
+  </p>
+  <div class="g-recaptcha"></div>
+  <p class=error>{{ formCtrl.error.message }}<>
+  <p><input type="submit" value="Login"></p>
+</form>
+<div class="g-recaptcha"></div>

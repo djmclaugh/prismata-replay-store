@@ -1,12 +1,10 @@
 <!DOCTYPE html>
 <html lang="en" ng-app="prismata-replays">
-  <%- include utilities.ejs -%>
-  <% var title = "Prismata Replays : "; if (replayCode) { title += replayCode; } else { title += "Error"; } -%>
-  
+  <% var title = "Prismata Replays : "; if (replayCode) { title += replayCode; } else { title += "Error"; } -%> 
   <%- include partials/header.ejs -%>
   
   <body ng-controller="ReplayViewController as replayCtrl" replay-code="<%= replayCode %>">
-    <%- include partials/navigation_bar.ejs %>
+    <navigation-bar></navigation-bar>
     <h1><%= title  %></h1>
     <h2 ng-if="replayCtrl.replay != null">{{replayCtrl.replay | replayTitle}} <br> {{replayCtrl.replay.date | date : "medium"}}</h2>
     <h2 class="error" ng-if="replayCtrl.error != null">{{replayCtrl.error.message}}</h2>

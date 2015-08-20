@@ -1,0 +1,7 @@
+<div class="navigation" ng-controller="NavigationBarController as navCtrl" ng-show="navCtrl.UserService.user != null">
+  <a href="/">Home</a>
+  <a href="/search">Search</a>
+  <a href="/settings" ng-show="navCtrl.UserService.user.username != null">{{ navCtrl.UserService.user.username }}</a>
+  <a href="/login" ng-show="navCtrl.UserService.user.username == null">Login</a>
+  <a href="/about">About</a>
+</div>

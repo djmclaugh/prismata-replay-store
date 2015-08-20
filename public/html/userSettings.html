@@ -1,0 +1,16 @@
+<p><a href="/logout">Logout</a></p>
+<form name="userSettingsForm" ng-controller="UserSettingsFormController as formCtrl" ng-submit="formCtrl.submit()" ng-show="formCtrl.UserService.user != null">
+  <div ng-show="formCtrl.UserService.user.username != null">
+    <p>Associated email address: {{ formCtrl.UserService.user.email }}</p>
+    <p>Current Username: {{ formCtrl.UserService.user.username }}</p>
+    <p>
+      <label for="new_username">Desired Username:</label>
+      <input id="new_username" type="text" maxlength="20" ng-model="formCtrl.newUsername">
+    </p>
+    <p><input type="submit" value="Change Username"></p>
+    <p class="error" ng-show="formCtrl.error != null">{{ formCtrl.error.message }}</p>
+  </div>
+  <div ng-show="formCtrl.UserService.user.username == null">
+    <p>You need to log in to access your settings.</p>
+  </div>
+</form>

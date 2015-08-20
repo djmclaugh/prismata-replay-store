@@ -2,14 +2,10 @@
 <html lang="en" ng-app="prismata-replays">
   <% var title = "Prismata Replays" %><%- include partials/header.ejs %>
   <body>
-    <%- include partials/navigation_bar.ejs %>
+    <navigation-bar></navigation-bar>
     <h1><%= title %></h1>
-    <%- include partials/errors.ejs -%>
-
     <add-replay-form></add-replay-form>
-
     <recent-replays></recent-replays> 
-
   </body>
 </html>
 

@@ -9,9 +9,6 @@ function setUp(req, res, next) {
   if (typeof(res.locals) == "undefined") {
     res.locals = {};
   }
-  res.locals.errors = req.session.errors || [];
-  req.session.errors = [];
-  req.session.recaptchaPass = false;
   db.User.findById(req.user, function(error, user) {
     if (error) {
       req.locals.errors.push(error.message);
@@ -52,11 +49,6 @@ function checkRecaptcha(req, res, next) {
 
 function getUserId(email, delivery, callback, req) {
   db.User.getOrCreateWithEmail(email, function(error, user) {
-    if (error) {
-      req.session.errors.push(error.message);
-    } else {
-      req.session.errors.push("An email has been sent to " + email + ".");
-    }
     callback(error, user._id);
   });
 }
@@ -90,28 +82,58 @@ router.get("/services/recent_replays", function(req, res) {
     .exec(onFind);
 });
 
-router.get("/", function(req, res) {
-  res.render("index", res.locals);
-});
-
-router.get("/login", function(req, res) {
-  res.render("login");
-});
-
 router.get("/logout", passwordless.logout(), function(req, res) {
   res.redirect("/");
 });
 
-router.post("/sendtoken", checkRecaptcha, requestTokenIfRecaptcha, function(req, res) {
-  if (req.recaptchaResult && req.recaptchaResult.success) {
-    res.redirect("/");
-  } else {
-    res.redirect("/login");
+router.post("/services/sendtoken", function(req, res) {
+  var key = req.body["g-recaptcha-response"];
+  var recaptchaResult = {success: false};
+  if (req.body.user == null) {
+    res.status(400).send("No email received.");
+    return;
   }
-});
+  if (!key) {
+    res.status(400).send("No ReCaptcha information received.");
+    return;
+  }
 
-router.get("/search", function(req, res) {
-  res.render("search", res.locals);
+  function onEmailSent() {
+    res.send("An email has been sent to " + req.body.user + "." );
+  }
+
+  function getUserId(email, delivery, callback, req) {
+    db.User.getOrCreateWithEmail(email, function(error, user) {
+      callback(error, user._id);
+    });
+  }
+
+  function onReCaptchaSuccess() {
+    passwordless.requestToken(getUserId)(req, res, onEmailSent);
+  }
+
+  function onReCaptchaResponse(response) {
+    var data = "";
+    response.on("data", function(chunk) {
+      data += chunk.toString();
+    });
+    response.on("end", function() {
+      try {
+        var parsedData = JSON.parse(data);
+        recaptchaResult = parsedData;
+        if (!recaptchaResult.success) {
+          res.status(403).send("ReCAPTCHA verification failed.");
+          return;
+        }
+      } catch(error) {
+        res.status(500).send("Unable to parse ReCAPTCHA results.");
+        return;
+      }
+      onReCaptchaSuccess();
+    });
+  }
+
+  https.get(require("./config").recaptchaURL + key, onReCaptchaResponse);
 });
 
 router.post("/services/search", function(req, res) {
@@ -123,11 +145,6 @@ router.post("/services/search", function(req, res) {
       res.send(replays);
     }
   });
-});
-
-router.get("/replay/:replayID", function(req, res) {
-  res.locals.replayCode = req.params.replayID;
-  res.render("replay", res.locals);
 });
 
 router.get("/services/replay/:replayCode", function(req, res) {
@@ -235,17 +252,44 @@ router.get("/services/commentsForReplay/:replayCode", function(req, res) {
     });
 });
 
-router.get("/settings", function(req, res) {
-  res.render("user_settings");
+router.post("/services/changeUsername", function(req, res) {
+  if (res.locals.user == null) {
+    res.status(400).send("You must be logged in to change your username");
+    return;
+  }
+  if (res.locals.user.username == req.body.newUsername) {
+    res.status(400).send("You already have \"" + req.body.newUsername + "\" as username.");
+    return;
+  }
+  res.locals.user.changeUsername(req.body.newUsername, function(error, user) {
+    if (error) {
+      res.status(500).send(error.message);
+    } else {
+      res.send(user);
+    }
+  });
 });
 
-router.post("/settings", function(req, res) {
-  res.locals.user.changeUsername(req.body.new_username, function(error) {
-    if (error) {
-      req.session.errors.push(error.message);
-    }
-    res.redirect(303, "/settings");
-  });
+// Views
+router.get("/", function(req, res) {
+  res.render("index");
+});
+
+router.get("/search", function(req, res) {
+  res.render("search");
+});
+
+router.get("/replay/:replayID", function(req, res) {
+  res.locals.replayCode = req.params.replayID;
+  res.render("replay", res.locals);
+});
+
+router.get("/login", function(req, res) {
+  res.render("login");
+});
+
+router.get("/settings", function(req, res) {
+  res.render("settings");
 });
 
 router.get("/about", function(req, res) {

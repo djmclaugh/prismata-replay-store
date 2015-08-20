@@ -3,7 +3,7 @@
   <div class="comment" ng-controller="CommentController as commentCtrl" ng-repeat="comment in commentsCtrl.comments">
     <strong>{{ comment.user.username }}</strong>:
     <em>{{ comment.date | date : "medium" }}</em>
-    <em ng-if="comment.lastUpdated != null"> - last edit  {{comment.lastUpdated | date : "medium" }}</em>
+    <em ng-if="commentCtrl.hasBeenEdited()"> - last edit  {{comment.lastUpdated | date : "medium" }}</em>
     <br>
     <div ng-hide="commentCtrl.isEditing">
       {{ comment.message.length >= 1 ? comment.message : "Comment removed by user" }}
@@ -16,5 +16,11 @@
       <button ng-show="commentCtrl.isEditing" ng-click="commentCtrl.submitEdit()">submit</button>
     </div>
     <div class="error" ng-show="commentCtrl.error != null">{{ commentCtrl.error.message }}</div>
+  </div>
+  <div ng-show="commentsCtrl.UserService.isLoggedIn()">
+    <textarea rows="3" cols="50" ng-model="commentsCtrl.newComment"></textarea>
+    <br>
+    <button ng-click="commentsCtrl.addComment()">Add Comment</button>
+    <p class="error" ng-show="commentsCtrl.newCommentError">{{ commentsCtrl.newCommentError.message }}<p>
   </div>
 </div>

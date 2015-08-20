@@ -32,7 +32,7 @@ userSchema.statics.getOrCreateWithEmail = function (email, callback) {
 };
 
 // Methods
-// callback - function(error)
+// callback - function(error, user)
 userSchema.methods.changeUsername = function(newUsername, callback) {
   var self = this;
   if (newUsername.length < 3) {
@@ -44,9 +44,9 @@ userSchema.methods.changeUsername = function(newUsername, callback) {
     // Otherwise, procede with changeing the user's username.
     var onLookup = function(error, user) {
       if (error) {
-        callback(error);
+        callback(error, null);
       } else if (user) {
-        callback(new Error("Username " + newUsername + " is not available."));
+        callback(new Error("Username " + newUsername + " is not available."), null);
       } else {
         self.username = newUsername;
         self.save(callback);
