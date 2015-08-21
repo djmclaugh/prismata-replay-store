@@ -157,6 +157,7 @@ app.controller("LoginFormController", function($http) {
   self.recaptchaKey = null;
   self.error = null;
   self.emailSent = false;
+  self.isSubmiting = false;
   self.successMessage = "";
   self.submit = function() {
     var body = {};
@@ -171,16 +172,21 @@ app.controller("LoginFormController", function($http) {
       self.error = new Error("Please answer the ReCaptcha.");
       return;
     }
+
+    self.isSubmiting = true;
+
     body.user = self.email;
 
     function onSuccess(response) {
       self.emailSent = true;
       self.error = null;
       self.successMessage = response.data;
+      self.isSubmiting = false;
     }
 
     function onError(response) {
       self.error = new Error(response.data);
+      self.isSubmiting = false;
     }
     $http.post("/api/user/sendToken", body).then(onSuccess, onError);
   };

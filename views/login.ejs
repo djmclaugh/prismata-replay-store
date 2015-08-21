@@ -6,7 +6,7 @@
     <h1><%= title %></h1>
     <p>To login, simply enter your email address and you'll receive a link to your existing or newly created account.</p>
     <form name="loginForm" ng-controller="LoginFormController as formCtrl" ng-submit="formCtrl.submit()">
-      <div ng-hide="formCtrl.emailSent">
+      <div ng-hide="formCtrl.emailSent || formCtrl.isSubmiting">
         <p>
           <label for="email">Emaill:</label>
           <input id="email" ng-model="formCtrl.email" type="email">
@@ -15,6 +15,7 @@
         <p class="error" ng-show="formCtrl.error != null">{{ formCtrl.error.message }}</p>
         <p><input type="submit" value="Login"></p>
       </div>
+      <p ng-show="formCtrl.isSubmiting"><strong>Login in...</strong></p>
       <p ng-show="formCtrl.emailSent"><strong>{{ formCtrl.successMessage }}</strong></p>
     </form>
   </body>
