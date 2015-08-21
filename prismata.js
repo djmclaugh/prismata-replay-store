@@ -8,6 +8,7 @@ const replayCodeRegex = new RegExp("^[A-z0-9@+]{5}-[$A-z0-9@+]{5}$");
 function rawToReplay(rawString) {
   var json = JSON.parse(rawString);
   var replay = {};
+  replay.replayData = json;
   replay.code = json.code;
   replay.players = [];
   for (var i = 0; i < json.playerInfo.length; ++i) {

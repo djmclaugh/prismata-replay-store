@@ -82,12 +82,10 @@ var Prismata = require("./prismata");
 var playerSchema = Schema({
   name: String,
   rating: Number
-});
-
+}, {_id: false});
 
 const LAST_REPLAY_SCHEMA_CHANGE = new Date(2015, 6, 13);
 var replaySchema = Schema({
-  // Replay Data
   code: String,
   players: [playerSchema],
   result: Number,
@@ -97,10 +95,11 @@ var replaySchema = Schema({
   length: Number,
   timeControls: Number,
   randomCards: [String],
+  replayData: {type: Object, select: false},
+  
   // Meta data
   lastUpdated: Date,
   dateAdded: Date,
-  popularity: Number
 });
 
 // Statics
