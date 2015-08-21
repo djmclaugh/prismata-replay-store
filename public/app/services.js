@@ -102,6 +102,7 @@ app.service("ReplayService", function($http) {
     }
     $http.get("/api/replay/recentReplays").then(onSuccess, onError);
   };
+  
   self.fetchSearchResults = function(query, callback) {
     function onSuccess(response) {
       self.searchResults.splice.apply(self.searchResults, [0, self.searchResults.length].concat(response.data));

@@ -26,8 +26,13 @@ app.controller("SearchFormController", function(ReplayService) {
 
   self.error = null;
   self.query = {};
-  self.query.include_rated = true;
-  self.query.include_unrated = true;
+  self.query.players = {};
+  self.query.ratings = {};
+  self.query.timeControls = {};
+  self.query.length = {};
+  self.query.duration = {};
+  self.query.includeArena = true;
+  self.query.includeCasual = true;
 
   self.submit = function () {
     updateNumberOfReplaysMessage(true);

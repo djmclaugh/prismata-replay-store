@@ -115,7 +115,6 @@ replaySchema.statics.getOrFetchReplay = function(replayCode, callback) {
       var now = Date.now();
       replay.lastUpdated = now;
       replay.dateAdded = now;
-      replay.popularity = 1;
       replay.save(function(err) {
         callback(err, replay);
       });
@@ -134,55 +133,79 @@ replaySchema.statics.getOrFetchReplay = function(replayCode, callback) {
 };
 
 // search - object {
-//   player,
-//   min_rating, 
-//   max_rating, 
-//   min_time_controls, 
-//   max_time_controls,
-//   min_length,
-//   max_length,
-//   min_duration_minutes,
-//   max_duration_minutes,
+//   players - object {p1, p2, preserveOrder},
+//   ratings - object {min, max}, 
+//   timeControls - object {min, max}, 
+//   length - object {min, max},
+//   duration - object {minMinutes, maxMinutes},
 //   units
+//   includeArena
+//   includeCasual
 // }
 // callback - function(error, replays)
 replaySchema.statics.search = function(search, callback) {
   console.log("Search queary: " + new Date().toISOString());
   console.log(search);
-  var filter = {};
-  
-  if (search.player && typeof search.player == "string") {
-    filter["players.name"] = { $regex : new RegExp(search.player, "i") };
+
+  var conditions = [];
+
+  // Players 
+  if (search.players && (search.players.p1 || search.players.p2)) {
+    if (search.players.preserveOrder) {
+      if (search.players.p1) {
+        var regex = new RegExp("^" + escapeRegExp(search.players.p1) + "$", "i");
+        conditions.push({"players.0.name": {$regex: regex}});
+      }
+      if (search.players.p2) {
+        var regex = new RegExp("^" + escapeRegExp(search.players.p2) + "$", "i");
+        conditions.push({"players.1.name": {$regex: regex}});
+      }
+    } else {
+      if (search.players.p1 && search.players.p2) {
+        var regex = new RegExp("^(" + escapeRegExp(search.players.p1) + "|" +
+            escapeRegExp(search.players.p2) + ")$", "i");
+        conditions.push({"players.0.name": {$regex: regex}});
+        conditions.push({"players.1.name": {$regex: regex}});
+      } else {
+        var regex = search.players.p1 ?
+            new RegExp("^" + escapeRegExp(search.players.p1) + "$", "i") :
+            new RegExp("^" + escapeRegExp(search.players.p2) + "$", "i");
+        conditions.push({"players.name": {$regex: regex}});
+      }
+    }
   }
 
-  var min;
-  var max;
-
-  if (search.min_rating || search.max_rating) {
-    min = search.min_rating ? Number(search.min_rating) : 0;
-    max = search.max_rating ? Number(search.max_rating) : Number.MAX_VALUE;
-    filter["players"] =
-        {$not: {$elemMatch: {$or: [{rating: {$lt: min}}, {rating: {$gt: max}}]}}};
+  // Ratings
+  if (search.ratings && (search.ratings.min || search.ratings.max)) {
+    var min = search.ratings.min ? Number(search.ratings.min) : 0;
+    var max = search.ratings.max ? Number(search.ratings.max) : Number.MAX_VALUE;
+    conditions.push(
+        {players: {$not: {$elemMatch: {$or: [{rating: {$lt: min}}, {rating: {$gt: max}}]}}}}
+    );
   }
 
-  if (search.min_time_controls || search.max_time_controls) {
-    min = search.min_time_controls ? Number(search.min_time_controls) : 0;
-    max = search.max_time_controls ? Number(search.max_time_controls) : Number.MAX_VALUE;
-    filter["timeControls"] = {$lte: max, $gte:min};
+  // Time Controls
+  if (search.timeControls && (search.timeControls.min || search.timeControls.max)) {
+    var min = search.timeControls.min ? Number(search.timeControls.min) : 0;
+    var max = search.timeControls.max ? Number(search.timeControls.max) : Number.MAX_VALUE;
+    conditions.push({timeControls: {$lte: max, $gte:min}});
   }
 
-  if (search.min_length || search.max_length) {
-    min = search.min_length ? Number(search.min_length) : 0;
-    max = search.max_length ? Number(search.max_length) : Number.MAX_VALUE;
-    filter["length"] = {$lte: max, $gte:min};
+  // Game Length
+  if (search.length && (search.length.min || search.length.max)) {
+    var min = search.length.min ? Number(search.length.min) : 0;
+    var max = search.length.max ? Number(search.length.max) : Number.MAX_VALUE;
+    conditions.push({length: {$lte: max, $gte:min}});
   }
 
-  if (search.min_duration_minutes || search.max_duration_minutes) {
-    min = search.min_duration_minutes ? Number(search.min_duration_minutes) * 60 : 0;
-    max = search.max_duration_minutes ? Number(search.max_duration_minutes) * 60 : Number.MAX_VALUE;
-    filter["duration"] = {$lte: max, $gte:min};
+  // Game Durations
+  if (search.duration && (search.duration.minMinutes || search.duration.maxMinutes)) {
+    min = search.duration.minMinutes ? Number(search.duration.minMinutes) * 60 : 0;
+    max = search.duration.maxMinutes ? Number(search.duration.maxMinutes) * 60 : Number.MAX_VALUE;
+    conditions.push({duration: {$lte: max, $gte:min}});
   }
 
+  // Random Units
   if (search.units && typeof search.units == "string") {
     var units = normalizeUnitNames(search.units);
     var requiredUnits = [];
@@ -194,26 +217,30 @@ replaySchema.statics.search = function(search, callback) {
         requiredUnits.push(units[i]);
       }
     }
-    filter["randomCards"] = {};
     if (excludedUnits.length > 0) {
-      filter["randomCards"].$not = {$in: excludedUnits};
+      conditions.push({randomCards: {$not: {$in: excludedUnits}}});
     }
     if (requiredUnits.length > 0) {
-      filter["randomCards"].$all = requiredUnits;
+      conditions.push({randomCards: {$all: requiredUnits}});
     }
   }
 
-  if (search.include_rated && !search.include_unrated) {
-    filter["rated"] = true;
-  } else if (!search.include_rated && search.include_unrated) {
-    filter["rated"] = false;
-  } else if (!search.include_rated && !search.include_unrated) {
-    filter["$where"] = "false";
+  if (search.includeArena != null && !search.includeArena) {
+    conditions.push({rated: false});
   }
-
+  if (search.includeCasual != null && !search.includeCasual) {
+    conditions.push({rated: true});
+  }
+  
+  var filter = conditions.length > 0 ? {$and: conditions} : {};
   this.find(filter, null, {sort: {date: -1}}, function(error, replays) {
     callback(error, replays);
   });
+};
+
+// Converts the string so that it can be used as a literal in a regular expression.
+function escapeRegExp(str) {
+  return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
 }
 
 function normalizeUnitNames(unitsString) {
@@ -243,26 +270,6 @@ replaySchema.statics.syncAllOutdatedReplays = function(callback) {
 
   this.find({lastUpdated: {$lt: LAST_REPLAY_SCHEMA_CHANGE}}).stream()
     .on("data", syncReplay)
-    .on("error", callback)
-    .on("end", function() {
-      callback(null);
-    });
-};
-
-// callback - function(error)
-replaySchema.statics.modifyPopularityOfAllReplays = function(factor, callback) {
-  var modifyPopularity = function(replay) {
-    // TODO: Better error handling
-    replay.popularity = replay.popularity * factor;
-    replay.save(function(error) {
-      if (error) {
-        console.log(error);
-      }
-    });
-  }
-
-  this.find({}).stream()
-    .on("data", modifyPopularity)
     .on("error", callback)
     .on("end", function() {
       callback(null);
