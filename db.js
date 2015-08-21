@@ -35,24 +35,26 @@ userSchema.statics.getOrCreateWithEmail = function (email, callback) {
 // callback - function(error, user)
 userSchema.methods.changeUsername = function(newUsername, callback) {
   var self = this;
-  if (newUsername.length < 3) {
+  if (newUsername == null || newUsername.length < 3) {
     callback(new Error("Username must be at least 3 charaters long."));
   } else if (newUsername.length > 20) {
     callback(new Error("Username must be at most 20 characters long."));
+  } else if (!new RegExp(/^[a-zA-Z0-9_\-]*$/).test(newUsername)) {
+    callback(new Error("Username must only contain characters, numbers, '-', or '_'."));
   } else {
     // If a user is found, then the username is not available.
     // Otherwise, procede with changeing the user's username.
     var onLookup = function(error, user) {
       if (error) {
         callback(error, null);
-      } else if (user) {
-        callback(new Error("Username " + newUsername + " is not available."), null);
+      } else if (user && user.username.toLowerCase() != self.username.toLowerCase()) {
+        callback(new Error("The username \"" + user.username + "\" is already taken."), null);
       } else {
         self.username = newUsername;
         self.save(callback);
       } 
     };
-    self.model(userModelName).findOne({username: newUsername}, onLookup);
+    self.model(userModelName).findOne({username:  new RegExp(newUsername, "i")}, onLookup);
   }
 };
 
