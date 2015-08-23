@@ -139,8 +139,8 @@ replaySchema.statics.getOrFetchReplay = function(replayCode, callback) {
 //   length - object {min, max},
 //   duration - object {minMinutes, maxMinutes},
 //   units
-//   includeArena
-//   includeCasual
+//   gameType - object {arena, casual},
+//   result - object {p1, p2, draw}
 // }
 // callback - function(error, replays)
 replaySchema.statics.search = function(search, callback) {
@@ -198,7 +198,7 @@ replaySchema.statics.search = function(search, callback) {
     conditions.push({length: {$lte: max, $gte:min}});
   }
 
-  // Game Durations
+  // Game Duration
   if (search.duration && (search.duration.minMinutes || search.duration.maxMinutes)) {
     min = search.duration.minMinutes ? Number(search.duration.minMinutes) * 60 : 0;
     max = search.duration.maxMinutes ? Number(search.duration.maxMinutes) * 60 : Number.MAX_VALUE;
@@ -225,13 +225,29 @@ replaySchema.statics.search = function(search, callback) {
     }
   }
 
-  if (search.includeArena != null && !search.includeArena) {
-    conditions.push({rated: false});
+  // Game Type
+  if (search.gameType) {
+    if (search.gameType.arena != null && !search.gameType.arena) {
+      conditions.push({rated: false});
+    }
+    if (search.gameType.casual != null && !search.gameType.casual) {
+      conditions.push({rated: true});
+    }
   }
-  if (search.includeCasual != null && !search.includeCasual) {
-    conditions.push({rated: true});
+
+  // Result
+  if (search.result) {
+    if (search.result.p1 != null && !search.result.p1) {
+      conditions.push({result: {$ne: 0}});
+    }
+    if (search.result.p2 != null && !search.result.p2) {
+      conditions.push({result: {$ne: 1}});
+    }
+    if (search.result.draw != null && !search.result.draw) {
+      conditions.push({result: {$ne: 2}});
+    }
   }
-  
+
   var filter = conditions.length > 0 ? {$and: conditions} : {};
   this.find(filter, null, {sort: {date: -1}}, function(error, replays) {
     callback(error, replays);

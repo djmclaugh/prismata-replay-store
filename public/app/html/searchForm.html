@@ -1,40 +1,53 @@
-<form class="search_form"  name="searchForm" ng-controller="SearchFormController as formCtrl" ng-submit="formCtrl.submit()">
+<form class="search-form"  name="searchForm" ng-controller="SearchFormController as formCtrl" ng-submit="formCtrl.submit()">
   <div class="field">
-    <label for="player_1">Contains players:</label>
+    <label class="field-label" for="player_1">Contains players:</label>
     <input id="player_1" ng-model="formCtrl.query.players.p1" type="text" placeholder="Player 1">
     vs.
     <input id="player_2" ng-model="formCtrl.query.players.p2" type="text" placeholder="Player 2">
-    <input type="checkbox" ng-model="formCtrl.query.players.preserveOrder">Fix Positions
+    <label><input type="checkbox" ng-model="formCtrl.query.players.preserveOrder">Fix Positions</label>
 
   </div>
+
   <div class="field">
-    <label for="min_rating">Player Ratings:</label>
+    <label class="field-label" for="min_rating">Player Ratings:</label>
     <input id="min_rating" ng-model="formCtrl.query.ratings.min" type="number" min="0" max="9999" placeholder="min"> -
     <input id="max_rating" ng-model="formCtrl.query.ratings.max" type="number" min="0" max="9999" placeholder="max">
   </div>
+
   <div class="field">
-    <label for="min_time_controls">Time controls (in seconds):</label>
+    <label class="field-label" for="min_time_controls">Time controls (in seconds):</label>
     <input id="min_time_controls" ng-model="formCtrl.query.timeControls.min" type="number" min="0" max="999" placeholder="min"> -
     <input id="max_time_controls" ng-model="formCtrl.query.timeControls.max" type="number" min="0" max="999" placeholder="max">
   </div>
+
   <div class="field">
-    <label for="min_length">Number of turns:</label>
+    <label class="field-label" for="min_length">Number of turns:</label>
     <input id="min_length" ng-model="formCtrl.query.length.min" type="number" min="0" max="999" placeholder="min"> -
     <input id="max_length" ng-model="formCtrl.query.length.max" type="number" min="0" max="999" placeholder="max">
   </div>
+
   <div class="field">
-    <label for="min_duration_minutes">Duration (in minutes):</label>
+    <label class="field-label" for="min_duration_minutes">Duration (in minutes):</label>
     <input id="min_duration_minutes" ng-model="formCtrl.query.duration.minMinutes" type="number" min="0" max="999" placeholder="min" step="any"> -
     <input id="max_duration_minutes" ng-model="formCtrl.query.duration.maxMinutes" type="number" min="0" max="999" placeholder="max" step="any">
   </div>
+
   <div class="field">
-    <label for="units">Contains units:</label>
+    <label class="field-label" for="units">Contains units:</label>
     <input id="units" ng-model="formCtrl.query.units" type="text" size="30" placeholder="Ex: Husk, Wild Drone, !Pixie">
   </div>
+
   <div class="field">
-    <label>Include:</label>
-    <input type="checkbox" ng-model="formCtrl.query.includeArena" value="true">Arena Games
-    <input type="checkbox" ng-model="formCtrl.query.includeCasual" value="true">Unrated Games
+    <label class="field-label">Result:</label>
+    <label><input type="checkbox" ng-model="formCtrl.query.result.p1">P1 win</label>
+    <label><input type="checkbox" ng-model="formCtrl.query.result.p2">P2 win</label>
+    <label><input type="checkbox" ng-model="formCtrl.query.result.draw">Draw</label>
+  </div>
+
+  <div class="field">
+    <label class="field-label">Game Type:</label>
+    <label><input type="checkbox" ng-model="formCtrl.query.gameType.arena">Arena Game</label>
+    <label><input type="checkbox" ng-model="formCtrl.query.gameType.casual">Casual Game</label>
   </div>
   <br>
   <br>

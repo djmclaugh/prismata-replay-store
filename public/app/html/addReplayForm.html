@@ -1,4 +1,4 @@
-<form class="add_replay_form" name="addReplayForm" ng-controller="AddReplayFormController as formCtrl" ng-submit="formCtrl.addReplay()">
+<form class="add-replay-form" name="addReplayForm" ng-controller="AddReplayFormController as formCtrl" ng-submit="formCtrl.addReplay()">
   <label for="replayCode">Replay Code:</label>
   <input ng-class="{'valid':addReplayForm.replayCode.$valid && formCtrl.replayCode.length > 0}" id="replayCode" name="replayCode" type="text" size="11" maxlength="11" placeholder="XXXXX-XXXXX" ng-model="formCtrl.replayCode" replay-code-validator/>
   <input type="submit" ng-disabled="!addReplayForm.replayCode.$valid || formCtrl.replayCode.length == 0" value="Add Replay"/>

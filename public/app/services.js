@@ -110,9 +110,9 @@ app.service("ReplayService", function($http) {
         callback(null);
       }
     }
-    function onError(responce) {
+    function onError(response) {
       if (callback) {
-        callback(new Error("Failled to fetch Search Results."));
+        callback(new Error("Failled to fetch search sesults: " + response.data));
       }
     }
     $http.post("/api/replay/search", query).then(onSuccess, onError);
@@ -124,7 +124,7 @@ app.service("ReplayService", function($http) {
       self.fetchRecentReplays();
     }
     function onError(response) {
-      if (response.status == 400) {
+      if (response.status == 403) {
         callback("ALREADY_EXISTS");
       } else {
         callback(response.data);

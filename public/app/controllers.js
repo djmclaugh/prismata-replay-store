@@ -31,8 +31,8 @@ app.controller("SearchFormController", function(ReplayService) {
   self.query.timeControls = {};
   self.query.length = {};
   self.query.duration = {};
-  self.query.includeArena = true;
-  self.query.includeCasual = true;
+  self.query.result = {p1: true, p2:true, draw:true};
+  self.query.gameType = {arena: true, casual: true};
 
   self.submit = function () {
     updateNumberOfReplaysMessage(true);
