@@ -31,6 +31,7 @@ app.controller("SearchFormController", function(ReplayService) {
   self.query.timeControls = {};
   self.query.length = {};
   self.query.duration = {};
+  self.query.date = {};
   self.query.result = {p1: true, p2:true, draw:true};
   self.query.gameType = {arena: true, casual: true};
 

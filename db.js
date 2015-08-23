@@ -138,6 +138,7 @@ replaySchema.statics.getOrFetchReplay = function(replayCode, callback) {
 //   timeControls - object {min, max}, 
 //   length - object {min, max},
 //   duration - object {minMinutes, maxMinutes},
+//   date - object {min, max},
 //   units
 //   gameType - object {arena, casual},
 //   result - object {p1, p2, draw}
@@ -203,6 +204,18 @@ replaySchema.statics.search = function(search, callback) {
     min = search.duration.minMinutes ? Number(search.duration.minMinutes) * 60 : 0;
     max = search.duration.maxMinutes ? Number(search.duration.maxMinutes) * 60 : Number.MAX_VALUE;
     conditions.push({duration: {$lte: max, $gte:min}});
+  }
+
+  // Date
+  if (search.date) {
+    if (search.date.min) {
+      var date = new Date(search.date.min);
+      conditions.push({date: {$gte: date}});
+    }
+    if (search.date.max) {
+      var date = new Date(search.date.max);
+      conditions.push({date: {$lte: date}});
+    }
   }
 
   // Random Units
