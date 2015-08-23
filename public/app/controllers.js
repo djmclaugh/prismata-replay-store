@@ -7,7 +7,7 @@ app.controller("AddReplayFormController", function(ReplayService) {
   self.error = "";
   self.addReplay = function() {
     ReplayService.addReplay(self.replayCode, function(result) {
-      if (result == "SUCESSFULLY_ADDED") {
+      if (result == "SUCCESSFULLY_ADDED") {
         self.replayCode = self.alreadyAddedCode = self.error = "";
       } else if (result == "ALREADY_EXISTS") {
         self.error = "";
