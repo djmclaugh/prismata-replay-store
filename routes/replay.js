@@ -3,10 +3,11 @@ var db = require("../db");
 
 var router = express.Router();
 
+const replayCodeRegex = "[A-z0-9@+]{5}-[$A-z0-9@+]{5}";
 // Returns the requested replay.
 // This will also add the replay to the database if it wasn't in there previously.
 // Will send a 500 response if this fails for any reason.
-router.get("/:replayCode([A-z0-9@+]{5}-[$A-z0-9@+]{5})", function(req, res) {
+router.get("/:replayCode("+ replayCodeRegex +")", function(req, res) {
   db.Replay.getOrFetchReplay(req.params.replayCode, onFetch);
 
   function onFetch(error, replay) {
@@ -72,6 +73,66 @@ router.post("/search", function(req, res) {
     }
   });
 });
+
+router.use("/:replayCode(" + replayCodeRegex + ")/tags", function(req, res, next) {
+  if (!res.locals.user) {
+    res.status(403).send("You must be logged in to modify tags.");
+    return;
+  }
+  
+  db.Replay.findOne({code: req.params.replayCode}, onFind);
+
+  function onFind(error, replay) {
+    if (error) {
+      res.status(500).send(error.message);
+    } else {
+      res.locals.replay = replay;
+      next();
+    }
+  }
+});
+
+router.put("/:replayCode(" + replayCodeRegex + ")/tags/:tag/upvote", function(req, res) {
+  res.locals.replay.modifyTag(true, true, req.params.tag, res.locals.user, function(error, tag) {
+    if (error) {
+      res.status(500).send(error.message);
+    } else {
+      res.send(tag);
+    }
+  });
+});
+
+router.delete("/:replayCode(" + replayCodeRegex + ")/tags/:tag/upvote", function(req, res) {
+  res.locals.replay.modifyTag(true, false, req.params.tag, res.locals.user, function(error, tag) {
+    if (error) {
+      res.status(500).send(error.message);
+    } else {
+      res.send(tag);
+    }
+  });
+});
+
+router.put("/:replayCode(" + replayCodeRegex + ")/tags/:tag/downvote", function(req, res) {
+  res.locals.replay.modifyTag(false, true, req.params.tag, res.locals.user, function(error, tag) {
+    if (error) {
+      res.status(500).send(error.message);
+    } else {
+      res.send(tag);
+    }
+  });
+});
+
+
+router.delete("/:replayCode(" + replayCodeRegex + ")/tags/:tag/downvote", function(req, res) {
+  res.locals.replay.modifyTag(false, false, req.params.tag, res.locals.user, function(error, tag) {
+    if (error) {
+      res.status(500).send(error.message);
+    } else {
+      res.send(tag);
+    }
+  });
+});
+
 
 module.exports = router;
 

@@ -84,6 +84,12 @@ var playerSchema = Schema({
   rating: Number
 }, {_id: false});
 
+var tagSchema = Schema({
+  label: String,
+  upvotes: [{type: Schema.Types.ObjectId, ref: userModelName}],
+  downvotes: [{type: Schema.Types.ObjectId, ref: userModelName}],
+}, {_id: false});
+
 const LAST_REPLAY_SCHEMA_CHANGE = new Date(2015, 6, 13);
 var replaySchema = Schema({
   code: String,
@@ -98,6 +104,7 @@ var replaySchema = Schema({
   replayData: {type: Object, select: false},
   
   // Meta data
+  tags: [tagSchema],
   lastUpdated: Date,
   dateAdded: Date,
 });
@@ -308,7 +315,7 @@ replaySchema.statics.syncAllOutdatedReplays = function(callback) {
 // Methods
 // callback - function(error)
 replaySchema.methods.syncWithPrismata = function(callback) {
-  self = this;
+  var self = this;
   
   var onFetch = function(error, replayData) {
     replayData.lastUpdated = Date.now();
@@ -318,7 +325,54 @@ replaySchema.methods.syncWithPrismata = function(callback) {
   };
  
   Prismata.fetchReplay(self.code, onFetch);
-}
+};
+
+replaySchema.methods.modifyTag = function(isUpvote, isAdd, tag, user, callback) {
+  var self = this;
+
+  var existingTag = null;
+  for (var i = 0; i < self.tags.length; ++i) {
+    if (self.tags[i].label == tag) {
+      existingTag = self.tags[i];
+      break;
+    }
+  }
+
+  if (!existingTag) {
+    if (isAdd) {
+      var upvotes = isUpvote ? [user] : [];
+      var downvotes = isUpvote ? [] : [user];
+      var newTag = {
+        label: tag,
+        upvotes: upvotes,
+        downvotes: downvotes
+      };
+      self.tags.push(newTag);
+    }
+  } else {
+    var list = isUpvote ? existingTag.upvotes : existingTag.downvotes;
+    if (isAdd) {
+      if (list.indexOf(user.id) == -1) {
+        list.push(user.id);
+      }
+    } else {
+      var index = list.indexOf(user.id);
+      if (index >= 0) {
+        list.splice(index, 1);
+      }
+    }
+  }
+
+  self.save(onSave);
+
+  function onSave(error, replay) {
+    if (error) {
+      callback(error, null);
+    } else {
+      callback(null, replay.tags);
+    }
+  }
+};
 
 exports.Replay = mongoose.model(replayModelName, replaySchema);
 
