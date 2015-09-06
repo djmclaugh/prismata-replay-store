@@ -17,6 +17,7 @@ router.use(fetchUserInformation);
 
 router.use("/user", require("./user.js"));
 router.use("/comment", require("./comment.js"));
+router.use("/tag", require("./tag.js"));
 router.use("/replay", require("./replay.js"));
 
 module.exports = router;

@@ -5,6 +5,7 @@ var Schema = mongoose.Schema;
 
 const userModelName = "User";
 const commentModelName = "Comment";
+const tagModelName = "Tag";
 const replayModelName = "Replay";
 
 // --- Users ---
@@ -76,18 +77,127 @@ commentSchema.pre("save", function(next) {
 
 exports.Comment = mongoose.model(commentModelName, commentSchema);
 
+// --- Tags ---
+var tagSchema = Schema({
+  label: {type: String, match: /^[a-z0-9\-]+$/},
+  replayCode: {type: String, index: true},
+  upvotes: [String],
+  downvotes: [String],
+  value: Number
+}, {
+  toObject: {versionKey: false},
+  toJSON: {versionKey: false}
+});
+
+tagSchema.pre("save", function(next) {
+  this.value = this.upvotes.length - this.downvotes.length;
+  next();
+});
+
+
+// Statics
+// callback - function(error, tag)
+tagSchema.statics.getOrCreateTag = function(label, replayCode, callback) {
+  self = this;
+  self.findOne({label: label, replayCode:replayCode}, onFind);
+
+  function onFind(error, tag) {
+    if (error) {
+      callback(error, null);
+    } else if (tag) {
+      callback(null, tag);
+    } else {
+      var tag = new self({
+        label: label,
+        replayCode: replayCode,
+        downvotes: [],
+        upvote: [],
+        value: 0
+      });
+      tag.save(onSave);
+    }
+  }
+
+  function onSave(error, tag) {
+    if (error) {
+      callback(error, null);
+    } else {
+      callback(null, tag);
+    }
+  }
+};
+
+// Methods
+// callback - function(error, tag)
+tagSchema.methods.upvote = function(user, callback) {
+  var self = this;
+  var id = user.id;
+  removeIfPresent(id, self.downvotes);
+  addIfMissing(id, self.upvotes);
+  self.save(onSave);
+
+  function onSave(error, tag) {
+    if (error) {
+      callback(error, null);
+    } else {
+      callback(null, tag);
+    }
+  }
+};
+
+tagSchema.methods.downvote = function(user, callback) {
+  var self = this;
+  var id = user.id;
+  addIfMissing(id, self.downvotes);
+  removeIfPresent(id, self.upvotes);
+  self.save(onSave);
+
+  function onSave(error, tag) {
+    if (error) {
+      callback(error, null);
+    } else {
+      callback(null, tag);
+    }
+  }
+};
+
+tagSchema.methods.cancelVote = function(user, callback) {
+  var self = this;
+  var id = user.id;
+  removeIfPresent(id, self.downvotes);
+  removeIfPresent(id, self.upvotes);
+  self.save(onSave);
+
+  function onSave(error, tag) {
+    if (error) {
+      callback(error, null);
+    } else {
+      callback(null, tag);
+    }
+  }
+};
+
+function removeIfPresent(item, list) {
+  var index = list.indexOf(item);
+  if (index >= 0) {
+    list.splice(index, 1);
+  }
+}
+
+function addIfMissing(item, list) {
+  if (list.indexOf(item) == -1) {
+    list.push(item);
+  }
+}
+
+exports.Tag = mongoose.model(tagModelName, tagSchema);
+
 // --- Replays ---
 var Prismata = require("./prismata");
 
 var playerSchema = Schema({
   name: String,
   rating: Number
-}, {_id: false});
-
-var tagSchema = Schema({
-  label: String,
-  upvotes: [{type: Schema.Types.ObjectId, ref: userModelName}],
-  downvotes: [{type: Schema.Types.ObjectId, ref: userModelName}],
 }, {_id: false});
 
 const LAST_REPLAY_SCHEMA_CHANGE = new Date(2015, 6, 13);
@@ -104,7 +214,6 @@ var replaySchema = Schema({
   replayData: {type: Object, select: false},
   
   // Meta data
-  tags: [tagSchema],
   lastUpdated: Date,
   dateAdded: Date,
 });
@@ -325,53 +434,6 @@ replaySchema.methods.syncWithPrismata = function(callback) {
   };
  
   Prismata.fetchReplay(self.code, onFetch);
-};
-
-replaySchema.methods.modifyTag = function(isUpvote, isAdd, tag, user, callback) {
-  var self = this;
-
-  var existingTag = null;
-  for (var i = 0; i < self.tags.length; ++i) {
-    if (self.tags[i].label == tag) {
-      existingTag = self.tags[i];
-      break;
-    }
-  }
-
-  if (!existingTag) {
-    if (isAdd) {
-      var upvotes = isUpvote ? [user] : [];
-      var downvotes = isUpvote ? [] : [user];
-      var newTag = {
-        label: tag,
-        upvotes: upvotes,
-        downvotes: downvotes
-      };
-      self.tags.push(newTag);
-    }
-  } else {
-    var list = isUpvote ? existingTag.upvotes : existingTag.downvotes;
-    if (isAdd) {
-      if (list.indexOf(user.id) == -1) {
-        list.push(user.id);
-      }
-    } else {
-      var index = list.indexOf(user.id);
-      if (index >= 0) {
-        list.splice(index, 1);
-      }
-    }
-  }
-
-  self.save(onSave);
-
-  function onSave(error, replay) {
-    if (error) {
-      callback(error, null);
-    } else {
-      callback(null, replay.tags);
-    }
-  }
 };
 
 exports.Replay = mongoose.model(replayModelName, replaySchema);
