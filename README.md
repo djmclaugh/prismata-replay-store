@@ -14,4 +14,4 @@ Here is what I do NOT want to accomplish:
 
 ## How to install
 If you want to run your own private instance of the app, all you need is node.js and mongoDB.
-Just fork the repository, npm install, edit config.json with appropriate values and you're good to go.
+Just fork the repository, npm install, edit config.json with appropriate values, and you're good to go.
