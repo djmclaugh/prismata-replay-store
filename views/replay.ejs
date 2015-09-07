@@ -9,7 +9,9 @@
     <h2 ng-if="replayCtrl.replay != null">{{replayCtrl.replay | replayTitle}} <br> {{replayCtrl.replay.date | date : "medium"}}</h2>
     <h2 class="error" ng-if="replayCtrl.error != null">{{replayCtrl.error.message}}</h2>
     <replay-iframe replay-code="<%= replayCode %>"></replay-iframe>
+    <br>
     <tags-section replay-code="<%= replayCode %>"></tags-section>
+    <br>
     <comments-section replay-code="<%= replayCode %>"></comments-section>
   </body>
 </html>
