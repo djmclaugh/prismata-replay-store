@@ -7,8 +7,8 @@ const replayCodeRegex = "[A-z0-9@+]{5}-[$A-z0-9@+]{5}";
 
 // Returns all tags associated with the provided replay.
 // Will send a 500 response if this fails for any reason.
-router.get("/replayCode/:replayCode(" + replayCodeRegex + ")", function (req, res) {
-  db.Tag.find({replayCode: req.params.replayCode}).sort({value: 1}).exec(onFind);
+router.get("/tagsForReplay/:replayCode(" + replayCodeRegex + ")", function (req, res) {
+  db.Tag.find({replayCode: req.params.replayCode}).sort({value: -1}).exec(onFind);
 
   function onFind(error, tags) {
     if (error) {
@@ -44,7 +44,7 @@ router.put("/", function(req, res) {
     res.status(400).send("Field 'label' of body is missing or isn't a string.");
   }
 
-  db.Tag.getOrCreateTag(req.params.label, req.params.replayCode, onFind);
+  db.Tag.getOrCreateTag(req.body.label, req.body.replayCode, onFind);
 
   function onFind(error, tag) {
     if (error) {
@@ -61,6 +61,7 @@ router.put("/", function(req, res) {
   }
 
   function onVote(error, tag) {
+    console.log(tag);
     if (error) {
       res.result(500).send(error.message);
     } else {

@@ -77,6 +77,68 @@ app.service("CommentService", function(ReplayService, $http) {
   };
 });
 
+app.service("TagService", function($http) {
+  var self = this;
+
+  var replayRegex = new RegExp("^[A-z0-9@+]{5}-[$A-z0-9@+]{5}$");
+  var labelRegex = new RegExp("^[a-z0-9\-]+$");
+
+  self.fetchTagsForReplay = function(replayCode, callback) {
+    if (!replayRegex.test(replayCode)) {
+      callback(new Error("Invalid replay code."), null);
+      return;
+    }
+
+    $http.get("/api/tag/tagsForReplay/" + replayCode).then(onSuccess, onError);
+    
+    function onSuccess(response) {
+      callback(null, response.data);
+    }
+
+    function onError(response) {
+      callback(new Error(response.data), null);
+    }
+  };
+
+  self.upvoteTag = function(replayCode, label, callback) {
+    modifyTag(replayCode, label, 1, callback);
+  };
+
+  self.downvoteTag = function(replayCode, label, callback) {
+    modifyTag(replayCode, label, -1, callback);
+  };
+
+  self.cancelVoteOnTag = function(replayCode, label, callback) {
+    modifyTag(replayCode, label, 0, callback);
+  };
+
+  function modifyTag(replayCode, label, value, callback) {
+    var body = {
+      replayCode: replayCode,
+      label: label.toLowerCase(),
+      value: value
+    };
+    if (!replayRegex.test(body.replayCode)) {
+      callback(new Error("Invalid replay code."), null);
+      return;
+    }
+    if (!labelRegex.test(body.label)) {
+      callback(new Error("Invalid label. Labels can only contain letters, numbers, and the character '-'."), null);
+      return;
+    }
+    
+    $http.put("/api/tag", body).then(onSuccess, onError);
+
+    function onSuccess(response) {
+      callback(null, response.data);
+    }
+
+    function onError(response) {
+      callback(new Error(response.data), null);
+    }
+  }
+});
+
 app.service("ReplayService", function($http) {
   var self = this;
 
@@ -147,6 +209,4 @@ app.service("ReplayService", function($http) {
     $http.get("/api/replay/" + replayCode).then(onSuccess, onError);
   };
 });
-
-
 

@@ -1,0 +1,25 @@
+<div ng-if="replayCode != null" ng-controller="TagBarForReplayController as tagsCtrl" replay-code="{{ replayCode }}">
+  <strong>Tags: </strong>
+  <div class="tag" ng-hide="tagsCtrl.expanded || !tag.value || tag.value <= 0" ng-repeat="tag in tagsCtrl.tags">
+    {{ tag.label }}
+  </div>
+  <button ng-hide="tagsCtrl.expanded" ng-click="tagsCtrl.showDetails()">Add Tags</button>
+  <div ng-show="tagsCtrl.expanded">
+    <div ng-repeat="tag in tagsCtrl.tags" ng-controller="TagController as tagCtrl">
+      {{ tag.label + " (" + tag.value + ")"}}
+      <button ng-show="tagCtrl.shouldShowVoteButtons()" ng-disabled="tagCtrl.hasDownvoted()" ng-click="tagCtrl.downvote()">downvote</button>
+      <button ng-show="tagCtrl.shouldShowVoteButtons()" ng-disabled="tagCtrl.hasUpvoted()" ng-click="tagCtrl.upvote()">upvote</button>
+      <p class="error" ng-show="tagCtrl.error != null">{{ tagCtrl.error.message }}</p>
+    </div>
+    <div ng-show="tagsCtrl.shouldShowAddTagButton()">
+      <br>
+      <input type="text" ng-model="tagsCtrl.newLabel">
+      <button ng-click="tagsCtrl.addTag()">Add Tag</button><br>
+    </div>
+    <p ng-hide="tagsCtrl.shouldShowAddTagButton()">You must be logged in to downvote or upvote tags.</p>
+    <br>
+    <button ng-show="tagsCtrl.expanded" ng-click="tagsCtrl.hideDetails()">Hide Tag Details</button>
+  </div>
+  <p class="error" ng-show="tagsCtrl.error != null">{{ tagsCtrl.error.message }}</p>
+</div>
+

@@ -84,6 +84,14 @@ app.directive("commentsSection", function() {
   };
 });
 
+app.directive("tagsSection", function() {
+  return {
+    restrict: "E",
+    templateUrl: "/app/html/tagsSection.html",
+    scope: {replayCode: "@replayCode"}
+  };
+});
+
 app.directive("replayIframe", function($log) {
   return {
     restrict: "E",

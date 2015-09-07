@@ -113,11 +113,6 @@ app.controller("CommentsForReplayController", function(CommentService, UserServi
       self.error = error;
     });
   });
-
-  CommentService.fetchCommentsForReplay($attrs.replayCode, function(error, comments) {
-    self.comments = comments;
-    self.error = error;
-  });
 });
 
 app.controller("CommentController", function(CommentService, UserService, $scope) {
@@ -215,4 +210,100 @@ app.controller("UserSettingsFormController", function(UserService) {
   }
 });
 
+app.controller("TagBarForReplayController", function(TagService, UserService, $attrs) {
+  var self = this;
 
+  self.replayCode = null;
+  self.tags = [];
+  self.error = [];
+  self.newLabel = null;
+  self.expanded = false;
+  self.UserService = UserService;
+
+  self.showDetails = function() {
+    self.expanded = true;
+  }
+
+  self.hideDetails = function() {
+    self.expanded = false;
+  }
+
+  self.addTag = function() {
+    for (var i = 0; i < self.tags.length; ++i) {
+      if (self.tags[i].label == self.newLabel.toLowerCase()) {
+        self.error = new Error("Tag '" + self.tags[i].label + "' already exists.");
+        return;
+      }
+    }
+    TagService.upvoteTag(self.replayCode, self.newLabel, function(error, tag) {
+      self.error = error;
+      if (error == null) {
+        self.newLabel = "";
+        self.tags.push(tag);
+      }
+    });
+  };
+
+  self.shouldShowAddTagButton = function() {
+    return UserService.isLoggedIn();
+  }
+
+  $attrs.$observe("replayCode", function(replayCode) {
+    self.replayCode = replayCode;
+    TagService.fetchTagsForReplay(self.replayCode, function(error, tags) {
+      self.tags = tags;
+      self.error = error;
+    });
+  });
+});
+
+app.controller("TagController", function(TagService, UserService, $scope) {
+  var self = this;
+  self.error = null;
+
+  self.shouldShowVoteButtons = function() {
+    return UserService.isLoggedIn();
+  }
+
+  self.hasUpvoted = function() {
+    if (!UserService.isLoggedIn()) {
+      return false;
+    }
+    var userId = UserService.user._id;
+    return $scope.tag.upvotes.indexOf(userId) != -1;
+  }
+
+  self.hasDownvoted = function() {
+    if (!UserService.isLoggedIn()) {
+      return false;
+    }
+    var userId = UserService.user._id;
+    return $scope.tag.downvotes.indexOf(userId) != -1;
+  }
+
+  self.upvote = function() {
+    $scope.tag.upvotes.push(UserService.user._id);
+    TagService.upvoteTag($scope.tag.replayCode, $scope.tag.label, onUpvote);
+    function onUpvote(error, tag) {
+      self.error = error;
+      if (!error) {
+        $scope.tag.value = tag.value;
+        $scope.tag.upvotes = tag.upvotes;
+        $scope.tag.downvotes = tag.downvotes;
+      }
+    }
+  };
+
+  self.downvote = function() {
+    $scope.tag.downvotes.push(UserService.user._id);
+    TagService.downvoteTag($scope.tag.replayCode, $scope.tag.label, onDownvote);
+    function onDownvote(error, tag) {
+      self.error = error;
+      if (!error) {
+        $scope.tag.value = tag.value;
+        $scope.tag.upvotes = tag.upvotes;
+        $scope.tag.downvotes = tag.downvotes;
+      }
+    }
+  };
+});

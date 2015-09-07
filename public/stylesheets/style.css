@@ -100,6 +100,15 @@ p {
   margin-bottom: 15px;
 }
 
+.tag {
+  display: inline-block;
+  text-align: center;
+  background-color: #F9F9F9;
+  border: 1px solid #DDDDDD;
+  padding: 10px;
+  margin: 2px;
+}
+
 .replay {
   text-align: center;
   background-color: #F9F9F9;
