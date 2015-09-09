@@ -34,6 +34,7 @@ app.controller("SearchFormController", function(ReplayService) {
   self.query.date = {};
   self.query.result = {p1: true, p2:true, draw:true};
   self.query.gameType = {arena: true, casual: true};
+  self.query.comments = {hasComments: true, noComments: true};
 
   self.submit = function () {
     updateNumberOfReplaysMessage(true);

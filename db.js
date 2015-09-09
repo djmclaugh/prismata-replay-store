@@ -75,6 +75,24 @@ commentSchema.pre("save", function(next) {
   next();
 });
 
+// Statics
+// callback - function(error, replayCodes)
+commentSchema.statics.getReplaysWithComments = function(callback) {
+  this.aggregate([
+    {$group: {_id: null, replayCodes: {$addToSet: "$replayCode"}}}
+  ], onCompletion);
+
+  function onCompletion(error, documents) {
+    if (error) {
+      callback(error, null);
+    } else if (documents.length > 0) {
+      callback(null, documents[0].replayCodes);
+    } else {
+      callback(null, []);
+    }
+  }
+};
+
 exports.Comment = mongoose.model(commentModelName, commentSchema);
 
 // --- Tags ---
@@ -127,6 +145,56 @@ tagSchema.statics.getOrCreateTag = function(label, replayCode, callback) {
   }
 };
 
+// callback - function(error, replayCodes)
+tagSchema.statics.getReplaysWithAllTagsOf = function(labels, callback) {
+  // Find all tags with relevent labels.
+  // For each replay, count how many labels have matched and keep track of the lowest valued label.
+  // Only keep replays that match all labels and that all labels have a positive value.
+  // Group the remaining replay codes in a set.
+  this.aggregate([
+    {$match: {label: {$in: labels}}},
+    {$group: {_id: "$replayCode", sum: {$sum: 1}, minValue: {$min: "$value"}}},
+    {$match: {minValue: {$gte: 1}, sum: labels.length}},
+    {$group: {_id: null, replayCodes: {$addToSet: "$_id"}}}
+  ], onCompletion);
+
+  function onCompletion(error, documents) {
+    if (error) {
+      callback(error, null);
+    } else if (documents.length > 0) {
+      callback(null, documents[0].replayCodes);
+    } else {
+      callback(null, []);
+    }
+  }
+};
+
+// callback - function(error, replayCodes)
+tagSchema.statics.getReplaysWithAtLeastOneTagOf = function(labels, callback) {
+  // Find all relevent tags.
+  // For each replay, keep track of the highest valued label.
+  // Find all replays that have at least one positively valued label.
+  // Group the remainig replay codes in a set.
+  this.aggregate([
+    {$match: {label: {$in: labels}}},
+    {$group: {_id: "$replayCode", maxValue: {$max: "$value"}}},
+    {$match: {maxValue: {$gte: 1}}},
+    {$group: {_id: null, replayCodes: {$addToSet: "$_id"}}}
+  ], onCompletion);
+
+  function onCompletion(error, documents) {
+    if (error) {
+      callback(error, null);
+    } else if (documents.length > 0) {
+      callback(null, documents[0].replayCodes);
+    } else {
+      callback(null, []);
+    }
+  }
+};
+
+
+
 // Methods
 // callback - function(error, tag)
 tagSchema.methods.upvote = function(user, callback) {
@@ -145,6 +213,7 @@ tagSchema.methods.upvote = function(user, callback) {
   }
 };
 
+// callback - function(error, tag)
 tagSchema.methods.downvote = function(user, callback) {
   var self = this;
   var id = user.id;
@@ -161,6 +230,7 @@ tagSchema.methods.downvote = function(user, callback) {
   }
 };
 
+// callback - function(error, tag)
 tagSchema.methods.cancelVote = function(user, callback) {
   var self = this;
   var id = user.id;
@@ -257,14 +327,22 @@ replaySchema.statics.getOrFetchReplay = function(replayCode, callback) {
 //   date - object {min, max},
 //   units
 //   gameType - object {arena, casual},
-//   result - object {p1, p2, draw}
+//   result - object {p1, p2, draw},
+//   comments - object {hasComment, noComments},
+//   tags
 // }
 // callback - function(error, replays)
 replaySchema.statics.search = function(search, callback) {
   console.log("Search queary: " + new Date().toISOString());
   console.log(search);
 
+  // Conditions that the replay must satisfy.
   var conditions = [];
+  // Some conditions need async call to be formulated.
+  // Perform all methods in array asynchronously to add these conditions.
+  var asyncCalls = [];
+
+  var self = this;
 
   // Players 
   if (search.players && (search.players.p1 || search.players.p2)) {
@@ -377,10 +455,97 @@ replaySchema.statics.search = function(search, callback) {
     }
   }
 
-  var filter = conditions.length > 0 ? {$and: conditions} : {};
-  this.find(filter, null, {sort: {date: -1}}, function(error, replays) {
-    callback(error, replays);
-  });
+  // Comments
+  var excludeReplaysWithComments = function(next) {
+    self.base.models.Comment.getReplaysWithComments(onGetReplays);
+    function onGetReplays(error, replayCodes) {
+      if (error) {
+        callback(error, null);
+      } else {
+        conditions.push({code: {$nin: replayCodes}});
+        next();
+      }
+    }
+  };
+  var excludeReplaysWithoutComments = function(next) {
+    self.base.models.Comment.getReplaysWithComments(onGetReplays);
+    function onGetReplays(error, replayCodes) {
+      if (error) {
+        callback(error, null);
+      } else {
+        conditions.push({code: {$in: replayCodes}});
+        next();
+      }
+    }
+  };
+
+  if (search.comments) {
+    if (search.comments.hasComments != null && !search.comments.hasComments) {
+      asyncCalls.push(excludeReplaysWithComments);  
+    }
+    if (search.comments.noComments != null && !search.comments.noComments) {
+      asyncCalls.push(excludeReplaysWithoutComments);
+    }
+  }
+
+  // Tags
+  if (search.tags && typeof search.tags == "string") {
+    var tags = normalizeTags(search.tags);
+    var requiredTags = [];
+    var excludedTags = [];
+    for (var i = 0; i < tags.length; ++i) {
+      if (tags[i].charAt(0) == "!") {
+        excludedTags.push(tags[i].substr(1));
+      } else {
+        requiredTags.push(tags[i]);
+      }
+    }
+    var filterRequiredTags = function(next) {
+      self.base.models.Tag.getReplaysWithAllTagsOf(requiredTags, function(error, replayCodes) {
+        if (error) {
+          callback(error, null);
+        } else {
+          conditions.push({code: {$in: replayCodes}});
+          next();
+        }
+      });
+    };
+    var filterExcludedTags = function(next) {
+      self.base.models.Tag.getReplaysWithAtLeastOneTagOf(excludedTags, function(error, replayCodes) {
+        if (error) {
+          callback(error, null);
+        } else {
+          conditions.push({code: {$nin: replayCodes}});
+          next();
+        }
+      });
+    };
+    if (requiredTags.length > 0) {
+      asyncCalls.push(filterRequiredTags);
+    }
+    if (excludedTags.length > 0) {
+      asyncCalls.push(filterExcludedTags);
+    }
+  }
+
+  asyncDo(0);
+
+  function asyncDo(index) {
+    if (index < asyncCalls.length) {
+      asyncCalls[index](function () {
+        asyncDo(index + 1);
+      });
+    } else {
+      onAsyncDone();
+    }
+  }
+
+  function onAsyncDone() {
+    var filter = conditions.length > 0 ? {$and: conditions} : {};
+    self.find(filter, null, {sort: {date: -1}}, function(error, replays) {
+      callback(error, replays);
+    });
+  };
 };
 
 // Converts the string so that it can be used as a literal in a regular expression.
@@ -399,6 +564,14 @@ function normalizeUnitNames(unitsString) {
     });
   }
   return units;
+}
+
+function normalizeTags(tagsString) {
+  var tags = tagsString.split(",");
+  for (var i = 0; i < tags.length; ++i) {
+    tags[i] = tags[i].trim();
+  }
+  return tags;
 }
 
 // callback - function(error)

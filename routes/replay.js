@@ -64,7 +64,6 @@ router.post("/addReplay", function(req, res) {
 // body - See the comment for "replaySchema.statics.search" in "db.js" for acceptable fields.
 //        All fields are optional. An empty body will fetch all replays.
 router.post("/search", function(req, res) {
-  console.log(req.body);
   db.Replay.search(req.body, function(error, replays) {
     if (error) {
       res.status(500).send(error.message);
