@@ -50,6 +50,7 @@ p {
   max-width: 800px;
   background: #F8F8F8;
   padding: 10px 30px 20px 30px;
+  border: 1px solid #DDDDDD;
   border-radius: 5px;
 }
 
@@ -123,7 +124,7 @@ p {
 
 .replay {
   text-align: center;
-  background-color: #F5F5F5;
+  background-color: #F8F8F8;
   border: 1px solid #DDDDDD;
   border-radius: 6px 6px 6px 6px;
   padding: 10px;
