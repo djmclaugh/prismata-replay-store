@@ -139,7 +139,7 @@ app.service("TagService", function($http) {
   }
 });
 
-app.service("ReplayService", function($http) {
+app.service("ReplayService", function($http, TagService) {
   var self = this;
 
   self.recentReplays = [];

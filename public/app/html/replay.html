@@ -1,4 +1,5 @@
 <div class="replay">
+  {{ console.log(replay) }}
   <h3>{{replay | replayTitle}}</h3>
   <div ng-repeat="unit in replay.randomCards">
     <img height=50 width=50 ng-src="{{unit | thumbnailImageSource}}" alt={{unit}} title={{unit}}>
@@ -7,6 +8,11 @@
   Replay Code: <a href="replay/{{replay.code}}">{{replay.code}}</a> <br>
   {{replay.rated ? "Arena Game" : "Casual Game"}} - {{replay.timeControls == Number.MAX_VALUE ? "No time controls" : replay.timeControls + "s. per turn"}}<br>
   {{replay.length}} turns in {{replay.duration | durationToString}} <br>
+  <br>
+  <div ng-show="replay.labels == null || replay.labels.length == 0" class="fake-tag">no tags</div>
+  <div class="tag" ng-repeat="label in replay.labels">
+    <strong>{{ label }}</strong>
+  </div><br>
   <br>
   <em>{{replay.date | date : "fullDate"}}</em>
 </div>

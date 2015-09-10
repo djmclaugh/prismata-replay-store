@@ -193,7 +193,33 @@ tagSchema.statics.getReplaysWithAtLeastOneTagOf = function(labels, callback) {
   }
 };
 
+// callback - function(error, replayObjects)
+tagSchema.statics.attachValidTagLabelsToReplays = function(replays, callback) {
+  var codeMap = {};
+  var replayObjects = [];
+  var replayCodes = [];
+  for (var i = 0; i < replays.length; ++i) {
+    replayCodes.push(replays[i].code);
+    replayObjects.push(replays[i].toObject());
+    codeMap[replays[i].code] = i;
+  }
+  this.aggregate([
+    {$match: {replayCode: {$in: replayCodes}, value: {$gt: 0}}},
+    {$group: {_id: "$replayCode", labels: {$addToSet: "$label"}}}
+  ], onCompletion);
 
+  function onCompletion(error, documents) {
+    if (error) {
+      callback(error, null);
+    } else {
+      for (var i = 0; i < documents.length; ++i) {
+        var objectIndex = codeMap[documents[i]._id];
+        replayObjects[objectIndex].labels = documents[i].labels;
+      }
+      callback(null, replayObjects);
+    }
+  }
+};
 
 // Methods
 // callback - function(error, tag)

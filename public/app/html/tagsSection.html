@@ -1,7 +1,7 @@
 <div ng-if="replayCode != null" ng-controller="TagBarForReplayController as tagsCtrl" replay-code="{{ replayCode }}">
   <strong>Tags: </strong>
   <div class="tag" ng-hide="tagsCtrl.expanded || !tag.value || tag.value <= 0" ng-repeat="tag in tagsCtrl.tags">
-    {{ tag.label }}
+    <strong>{{ tag.label }}</strong>
   </div>
   <button ng-hide="tagsCtrl.expanded" ng-click="tagsCtrl.showDetails()">Add Tags</button>
   <div ng-show="tagsCtrl.expanded">

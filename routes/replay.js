@@ -28,9 +28,18 @@ router.get("/recentReplays", function(req, res) {
     if (error) {
       res.status(500).send(error.message);
     } else {
-      res.send(replays);
+      db.Tag.attachValidTagLabelsToReplays(replays, onLabelsAdded);
     }
   }
+
+  function onLabelsAdded(error, replayObjects) {
+    if (error) {
+      res.status(500).send(error.message);
+    } else {
+      res.send(replayObjects);
+    }
+  }
+
 });
 
 // Tries to add the requested replay to the database and return it.
@@ -68,9 +77,17 @@ router.post("/search", function(req, res) {
     if (error) {
       res.status(500).send(error.message);
     } else {
-      res.send(replays);
+      db.Tag.attachValidTagLabelsToReplays(replays, onLabelsAdded);
     }
   });
+
+  function onLabelsAdded(error, replayObjects) {
+    if (error) {
+      res.status(500).send(error.message);
+    } else {
+      res.send(replayObjects);
+    }
+  }
 });
 
 module.exports = router;
