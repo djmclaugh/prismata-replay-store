@@ -145,6 +145,24 @@ tagSchema.statics.getOrCreateTag = function(label, replayCode, callback) {
   }
 };
 
+// callback - function(error, allLabels)
+tagSchema.statics.getAllTagLabels = function(callback) {
+  this.aggregate([
+    {$match: {value: {$gt: 0}}},
+    {$group: {_id: null, labels: {$addToSet: "$label"}}}
+  ], onCompletion);
+
+  function onCompletion(error, documents) {
+    if (error) {
+      callback(error, null);
+    } else if (documents.length > 0) {
+      callback(null, documents[0].labels);
+    } else {
+      callback(null, []);
+    }
+  }
+};
+
 // callback - function(error, replayCodes)
 tagSchema.statics.getReplaysWithAllTagsOf = function(labels, callback) {
   // Find all tags with relevent labels.
@@ -371,27 +389,24 @@ replaySchema.statics.search = function(search, callback) {
   var self = this;
 
   // Players 
-  if (search.players && (search.players.p1 || search.players.p2)) {
+  if (search.players &&
+      (typeof search.players.p1 == "string" || typeof search.players.p2 == "string")) {
     if (search.players.preserveOrder) {
-      if (search.players.p1) {
-        var regex = new RegExp("^" + escapeRegExp(search.players.p1) + "$", "i");
-        conditions.push({"players.0.name": {$regex: regex}});
+      if (typeof search.players.p1 == "string") {
+        conditions.push({"players.0.name": search.players.p1});
       }
-      if (search.players.p2) {
-        var regex = new RegExp("^" + escapeRegExp(search.players.p2) + "$", "i");
-        conditions.push({"players.1.name": {$regex: regex}});
+      if (typeof search.players.p2 == "string") {
+        conditions.push({"players.1.name": search.players.p2});
       }
     } else {
-      if (search.players.p1 && search.players.p2) {
-        var regex = new RegExp("^(" + escapeRegExp(search.players.p1) + "|" +
-            escapeRegExp(search.players.p2) + ")$", "i");
-        conditions.push({"players.0.name": {$regex: regex}});
-        conditions.push({"players.1.name": {$regex: regex}});
+      if (typeof search.players.p1 == "string" && typeof search.players.p2 == "string") {
+        var match = {$in: [search.players.p1, search.players.p2]};
+        conditions.push({"players.0.name": match});
+        conditions.push({"players.1.name": match});
       } else {
-        var regex = search.players.p1 ?
-            new RegExp("^" + escapeRegExp(search.players.p1) + "$", "i") :
-            new RegExp("^" + escapeRegExp(search.players.p2) + "$", "i");
-        conditions.push({"players.name": {$regex: regex}});
+        var player = typeof search.players.p1 == "string" ?
+            search.players.p1 : search.players.p2;
+        conditions.push({"players.name": player});
       }
     }
   }
@@ -439,23 +454,11 @@ replaySchema.statics.search = function(search, callback) {
   }
 
   // Random Units
-  if (search.units && typeof search.units == "string") {
-    var units = normalizeUnitNames(search.units);
-    var requiredUnits = [];
-    var excludedUnits = [];
-    for (var i = 0; i < units.length; ++i) {
-      if (units[i].charAt(0) == "!") {
-        excludedUnits.push(units[i].substr(1));
-      } else {
-        requiredUnits.push(units[i]);
-      }
-    }
-    if (excludedUnits.length > 0) {
-      conditions.push({randomCards: {$not: {$in: excludedUnits}}});
-    }
-    if (requiredUnits.length > 0) {
-      conditions.push({randomCards: {$all: requiredUnits}});
-    }
+  if (isNonEmptyArray(search.includedUnits)) {
+    conditions.push({randomCards: {$all: search.includedUnits}});
+  }
+  if (isNonEmptyArray(search.excludedUnits)) {
+    conditions.push({randomCards: {$all: search.excludedUnits}});
   }
 
   // Game Type
@@ -515,19 +518,9 @@ replaySchema.statics.search = function(search, callback) {
   }
 
   // Tags
-  if (search.tags && typeof search.tags == "string") {
-    var tags = normalizeTags(search.tags);
-    var requiredTags = [];
-    var excludedTags = [];
-    for (var i = 0; i < tags.length; ++i) {
-      if (tags[i].charAt(0) == "!") {
-        excludedTags.push(tags[i].substr(1));
-      } else {
-        requiredTags.push(tags[i]);
-      }
-    }
+  if (isNonEmptyArray(search.includedTags)) {
     var filterRequiredTags = function(next) {
-      self.base.models.Tag.getReplaysWithAllTagsOf(requiredTags, function(error, replayCodes) {
+      self.base.models.Tag.getReplaysWithAllTagsOf(search.includedTags, function(error, replayCodes) {
         if (error) {
           callback(error, null);
         } else {
@@ -536,8 +529,11 @@ replaySchema.statics.search = function(search, callback) {
         }
       });
     };
-    var filterExcludedTags = function(next) {
-      self.base.models.Tag.getReplaysWithAtLeastOneTagOf(excludedTags, function(error, replayCodes) {
+    asyncCalls.push(filterRequiredTags);
+  }
+  if (isNonEmptyArray(search.excludedTags)) {
+     var filterExcludedTags = function(next) {
+     self.base.models.Tag.getReplaysWithAtLeastOneTagOf(search.excludedTags, function(error, replayCodes) {
         if (error) {
           callback(error, null);
         } else {
@@ -546,12 +542,7 @@ replaySchema.statics.search = function(search, callback) {
         }
       });
     };
-    if (requiredTags.length > 0) {
-      asyncCalls.push(filterRequiredTags);
-    }
-    if (excludedTags.length > 0) {
-      asyncCalls.push(filterExcludedTags);
-    }
+    asyncCalls.push(filterExcludedTags);
   }
 
   asyncDo(0);
@@ -574,30 +565,8 @@ replaySchema.statics.search = function(search, callback) {
   };
 };
 
-// Converts the string so that it can be used as a literal in a regular expression.
-function escapeRegExp(str) {
-  return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
-}
-
-function normalizeUnitNames(unitsString) {
-  var units = unitsString.split(",");
-  for (var i = 0; i < units.length; ++i) {
-    // Remove whitespace.
-    units[i]  = units[i].trim();
-    // Normalize capitalization.
-    units[i] = units[i].replace(/\w+/g, function(txt) {
-      return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
-    });
-  }
-  return units;
-}
-
-function normalizeTags(tagsString) {
-  var tags = tagsString.split(",");
-  for (var i = 0; i < tags.length; ++i) {
-    tags[i] = tags[i].trim();
-  }
-  return tags;
+function isNonEmptyArray(item) {
+  return item != null && item.length && item.length > 0;
 }
 
 // callback - function(error)
@@ -618,6 +587,50 @@ replaySchema.statics.syncAllOutdatedReplays = function(callback) {
     .on("end", function() {
       callback(null);
     });
+};
+
+
+var allUnitNames = null;
+// callback - function(error, allUnitNames)
+replaySchema.statics.getAllUnitNames = function(callback) {
+  if (allUnitNames) {
+    callback(null, allUnitNames);
+    return;
+  }
+
+  this.aggregate([
+    {$unwind: "$randomCards"},
+    {$group: {_id: null, unitNames: {$addToSet: "$randomCards"}}}
+  ], onCompletion);
+
+  function onCompletion(error, documents) {
+    if (error) {
+      callback(error, null);
+    } else if (documents.length > 0) {
+      allUnitNames = documents[0].unitNames;
+      callback(null, documents[0].unitNames);
+    } else {
+      callback(null, []);
+    }
+  }
+};
+
+// callback - function(error, allPlayerNames)
+replaySchema.statics.getAllPlayerNames = function(callback) {
+  this.aggregate([
+    {$unwind: "$players"},
+    {$group: {_id: null, playerNames: {$addToSet: "$players.name"}}}
+  ], onCompletion);
+
+  function onCompletion(error, documents) {
+    if (error) {
+      callback(error, null);
+    } else if (documents.length > 0) {
+      callback(null, documents[0].playerNames);
+    } else {
+      callback(null, []);
+    }
+  }
 };
 
 // Methods

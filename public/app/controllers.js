@@ -38,6 +38,16 @@ app.controller("SearchFormController", function(ReplayService) {
 
   self.submit = function () {
     updateNumberOfReplaysMessage(true);
+    if (self.autocomplete_p1.length == 1) {
+      self.query.players.p1 = self.autocomplete_p1[0];
+    } else {
+      self.query.players.p1 = null;
+    }
+    if (self.autocomplete_p2.length == 1) {
+      self.query.players.p2 = self.autocomplete_p2[0];
+    } else {
+      self.query.players.p2 = null;
+    }
     ReplayService.fetchSearchResults(self.query, function(error) {
       self.error = error;
       updateNumberOfReplaysMessage(false);

@@ -1,0 +1,11 @@
+<div ng-repeat="selectedTag in selectedTags" class="autocomplete-entry">
+  <span class="tagName">{{selectedTag}}</span>
+  <span class="cross" ng-click="removeTag(selectedTag)"><strong>X</strong></span>
+</div>
+<div ng-show="error == null" class="autocomplete-input">
+  <input ng-show="limit > selectedTags.length" type="text" placeholder="{{ placeholder }}" ng-keydown="onKeyDown($event)" ng-blur="lostFocus()" ng-model="searchText" ng-change="search()"/>
+  <ul id="suggestions" class="suggestions-list">
+    <li ng-repeat="suggestion in suggestions"  ng-mousedown="onMousedown($event)" ng-click="onClick(suggestion)" ng-mouseover="$parent.selectedIndex = $index" ng-class="{active : selectedIndex == $index}">{{suggestion}}</li>
+  </ul>
+</div>
+<span ng-show="error" class="error">Error while trying to fetch autocomplete options: {{ error.message }}</span>

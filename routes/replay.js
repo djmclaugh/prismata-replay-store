@@ -19,6 +19,33 @@ router.get("/:replayCode("+ replayCodeRegex +")", function(req, res) {
   }
 });
 
+// Returns an array of all unit names.
+// Will send a 500 response if this fails for any reason.
+router.get("/allUnitNames", function (req, res) {
+  db.Replay.getAllUnitNames(onGet);
+  function onGet(error, allUnitNames) {
+    if (error) {
+      res.status(500).send(error.message);
+    } else {
+      res.send(allUnitNames);
+    }
+  }
+});
+
+// Returns an array of all player names.
+// Will send a 500 response if this fails for any reaosn.
+router.get("/allPlayerNames", function (req, res) {
+  db.Replay.getAllPlayerNames(onGet);
+  function onGet(error, allPlayerNames) {
+    if (error) {
+      res.status(500).send(error.message);
+    } else {
+      res.send(allPlayerNames);
+    }
+  }
+});
+
+
 // Returns the 5 most recently added replays.
 // Will send a 500 response if this fails for any reason.
 router.get("/recentReplays", function(req, res) {

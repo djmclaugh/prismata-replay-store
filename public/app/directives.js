@@ -116,3 +116,85 @@ app.directive("replayIframe", function($log) {
   };
 });
 
+
+app.directive('autoComplete', function($http) {
+  return {
+    restrict:'E',
+    scope: {
+      selectedTags:'=model'
+    },
+    templateUrl:'/app/html/autocompleteMultipleInput.html',
+    link: function(scope, elem, attrs) {
+      scope.placeholder = attrs.placeholder;
+      scope.limit = attrs.limit ? Number(attrs.limit) : Number.MAX_VALUE;
+      scope.suggestions = [];
+      scope.selectedTags = [];
+      scope.selectedIndex = 0;
+      scope.error = null;
+
+      $http.get(attrs.source).then(onSuccess, onError);
+      function onSuccess(response) {
+        scope.wordBank = response.data;
+      }
+      function onError(response) {
+        scope.error = new Error(response.data);
+      }
+
+      scope.removeTag = function(tag) {
+        var index = scope.selectedTags.indexOf(tag);
+        if (index >= 0) {
+          scope.selectedTags.splice(index, 1);
+        }
+      };
+
+      scope.search = function() {
+        var regex = new RegExp(scope.searchText, "i");
+        scope.suggestions = scope.wordBank.filter(function(item) {
+          return regex.test(item) && scope.selectedTags.indexOf(item) == -1;
+        });
+        scope.selectedIndex = 0;
+      };
+
+      scope.addToSelectedTags = function(tag) {
+        if (scope.selectedTags.indexOf(tag) == -1) {
+          scope.selectedTags.push(tag);
+          scope.searchText = '';
+          scope.suggestions = [];
+        }
+      };
+
+      scope.onKeyDown = function(event) {
+        if (event.keyCode == 40){
+          event.preventDefault();
+          if (scope.selectedIndex + 1 < scope.suggestions.length){
+            scope.selectedIndex++;
+          }
+        } else if (event.keyCode == 38) {
+          event.preventDefault();
+          if (scope.selectedIndex >= 0) {
+            scope.selectedIndex--;
+          }
+        } else if (event.keyCode == 13) {
+          event.preventDefault();
+          if (scope.selectedIndex < scope.suggestions.length) {
+            scope.addToSelectedTags(scope.suggestions[scope.selectedIndex]);
+          }
+        }
+      };
+
+      scope.onMousedown = function(event) {
+        event.preventDefault();
+      }
+
+      scope.onClick = function(suggestion) {
+        scope.addToSelectedTags(suggestion);
+      } 
+
+      scope.lostFocus = function() {
+        scope.suggestions = [];
+        scope.searchText = "";
+        scope.selectedIndex = 0;
+      };
+    }
+  }
+});

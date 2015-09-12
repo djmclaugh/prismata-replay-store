@@ -1,12 +1,12 @@
 <form class="search-form"  name="searchForm" ng-controller="SearchFormController as formCtrl" ng-submit="formCtrl.submit()">
   <h2>Game Properties</h2>
-  <div class="field">
-    <label class="field-label" for="player_1">Contains players:</label>
-    <input id="player_1" ng-model="formCtrl.query.players.p1" type="text" placeholder="Player 1">
-    vs.
-    <input id="player_2" ng-model="formCtrl.query.players.p2" type="text" placeholder="Player 2">
-    <label><input type="checkbox" ng-model="formCtrl.query.players.preserveOrder">Fix Positions</label>
 
+  <div class="field">
+    <label class="field-label">Contains players:</label>
+    <auto-complete model="formCtrl.autocomplete_p1" source="/api/replay/allPlayerNames" limit="1" placeholder="Player 1"></auto-complete>
+    vs.
+    <auto-complete model="formCtrl.autocomplete_p2" source="/api/replay/allPlayerNames" limit="1" placeholder="Player 2"></auto-complete>
+    <label><input type="checkbox" ng-model="formCtrl.query.players.preserveOrder">Fix Positions</label>
   </div>
 
   <div class="field">
@@ -34,6 +34,16 @@
   </div>
 
   <div class="field">
+    <label class="field-label">Contains units:</label>
+    <auto-complete model="formCtrl.query.includedUnits" source="/api/replay/allUnitNames" limit="11" placeholder="add a unit"></auto-complete>
+  </div>
+
+  <div class="field">
+    <label class="field-label">Does NOT contain units:</label>
+    <auto-complete model="formCtrl.query.excludedUnits" source="/api/replay/allUnitNames" placeholder="add a unit"></auto-complete>
+  </div>
+
+  <div class="field">
     <label class="field-label" for="units">Contains units:</label>
     <input id="units" ng-model="formCtrl.query.units" type="text" size="30" placeholder="Ex: Husk, Wild Drone, !Pixie">
   </div>
@@ -56,11 +66,19 @@
     <label><input type="checkbox" ng-model="formCtrl.query.gameType.arena">Arena Game</label>
     <label><input type="checkbox" ng-model="formCtrl.query.gameType.casual">Casual Game</label>
   </div>
+  
   <h2>Community Properties</h2>
+
   <div class="field">
-    <label class="field-label" for="tags">Has tags:</label>
-    <input id="tags" ng-model="formCtrl.query.tags" type="text" size="30" placeholder="Ex: pawc, !final">
+    <label class="field-label">Is taged:</label>
+    <auto-complete model="formCtrl.query.includedTags" source="/api/tag/allTagLabels" placeholder="add a tag"></auto-complete>
   </div>
+
+  <div class="field">
+    <label class="field-label">Is NOT taged:</label>
+    <auto-complete model="formCtrl.query.excludedTags" source="/api/tag/allTagLabels" placeholder="add a tag"></auto-complete>
+  </div>
+
   <div class="field">
     <label class="field-label">Comments:</label>
     <label><input type="checkbox" ng-model="formCtrl.query.comments.hasComments">Has Comments</label>

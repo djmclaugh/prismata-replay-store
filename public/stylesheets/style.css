@@ -48,9 +48,9 @@ p {
   margin-left:auto;
   margin-right:auto;
   max-width: 800px;
-  background: #F8F8F8;
+  background: #F6F6F6;
   padding: 10px 30px 20px 30px;
-  border: 1px solid #DDDDDD;
+  border: 1px solid #CCCCCC;
   border-radius: 5px;
 }
 
@@ -65,7 +65,6 @@ p {
 
 .search-form input[type="text"], .search-form input[type="number"], .search-form input[type="date"] {
   height: 30px;
-  line-height:15px;
   padding: 0px 0px 0px 10px;
   margin-top: 2px;
   margin-bottom: 10px;
@@ -75,7 +74,8 @@ p {
 
 .search-form .field {
   display: inline-block;
-  margin: 5px 5px 5px 5px;
+  margin: 3px;
+  padding: 8px;
 }
 
 .error {
@@ -126,7 +126,7 @@ p {
   text-align: center;
   background-color: #F8F8F8;
   border: 1px solid #DDDDDD;
-  border-radius: 6px 6px 6px 6px;
+  border-radius: 6px;
   padding: 10px;
   margin: 2px;
   display: inline-block;
@@ -140,5 +140,56 @@ p {
 .replay img {
   margin-left: 2px;
   margin-right: 2px;
+}
+
+.autocomplete-entry {
+    display: inline-block;
+    padding: 4px;
+    margin-right: 2px;
+    margin-left: 2px;
+    margin-top: 3px;
+    margin-bottom: 10px;
+    background: #F2F2F2;
+    border-radius: 4px;
+    border: 1px solid #DDDDDD;
+}
+
+.autocomplete-entry .cross {
+    margin-left: 5px;
+    margin-right: 3px;
+    opacity: .7;
+    cursor: pointer;
+}
+
+.autocomplete-entry .cross:hover {
+    opacity: 1;
+}
+
+.autocomplete-input {
+  display: inline-block;
+  position: relative;
+}
+
+.suggestions-list {
+    z-index: 100;
+    position: absolute;
+    top: 35px;
+    list-style: none;
+    padding: 0px;
+    margin: 0px;
+    overflow: auto;
+}
+
+.suggestions-list li {
+    padding: 4px 10px;
+    cursor: pointer;
+    background: #F2F2F2;
+    border-left: 1px solid #DDDDDD;
+    border-right: 1px solid #DDDDDD;
+    border-bottom: 1px solid #DDDDDD;
+}
+
+.suggestions-list li.active {
+    background: #DDDDDD;
 }
 
